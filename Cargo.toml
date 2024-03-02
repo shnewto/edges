@@ -1,0 +1,18 @@
+[package]
+name = "edges"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default=[]
+bevy=["dep:bevy"]
+
+[dependencies]
+glam = "0.25.0"
+image = "0.24.9"
+thiserror = "1.0.57"
+
+[dependencies.bevy]
+version = "0.13.0"
+optional = true
+
