@@ -1,7 +1,21 @@
 [package]
 name = "edges"
+# don't manually edit this version unless you're sure you want to circumvent the process documented in RELEASE.md
 version = "0.1.0"
 edition = "2021"
+authors = ["@shnewto"]
+
+description = "a library for getting the edges of objects in images with transparency"
+readme = "README.md"
+keywords = ["image", "edge", "transparency"]
+
+homepage = "https://github.com/shnewto/edges"
+repository = "https://github.com/shnewto/edges"
+
+license = "MIT OR Apache-2.0"
+
+
+
 
 [features]
 default=[]
