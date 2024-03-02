@@ -10,7 +10,7 @@ get the edges of objects in images with transparency
 
 this existed first as implementation over in a crate called [bevy_collider_gen](<https://github.com/shnewto/bevy_collider_gen>). at the time, that's what it seemed most useful for. this crate represents me starting to wonder whether it's useful for something else, but at the moment it the api is a bit of a nuisance to use.
 
-i'm working through how to make it less of a nuisance, and if I succeed, I'll be using it over in the [bevy_collider_gen](<https://github.com/shnewto/bevy_collider_gen>) crate.
+i'm working through how to make it less of a nuisance, and if I succeed, I'll drop in into [bevy_collider_gen](<https://github.com/shnewto/bevy_collider_gen>).
 
 ## how it works
 
