@@ -1,5 +1,8 @@
+use std::fmt;
+
 use glam::Vec2;
 
+#[derive(Default)]
 pub struct Edges {
     #[cfg(feature = "bevy")]
     i: bevy::prelude::Image,
@@ -35,9 +38,9 @@ impl Edges {
     /// Takes a Bevy DynamicImage type and an boolean to indicate whether to translate
     /// the points you get back to either side of (0, 0) instead of everything in positive x and y
     pub fn image_to_edges(&self, translate: bool) -> Vec<Vec<Vec2>> {
-        let rows = (self.i.height()) as usize;
-        let cols = (self.i.width()) as usize;
-        let data: &[u8] = self.i.as_bytes();
+        let rows = self.height();
+        let cols = self.width();
+        let data: &[u8] = self.bytes();
         let mut byte_combine_step: usize = 1;
         if (rows * cols) < data.len() {
             byte_combine_step = data.len() / (rows * cols);
@@ -190,6 +193,33 @@ impl Edges {
             .map(|p| self.xy_translate(p, rows, cols))
             .collect()
     }
+
+    fn width(&self) -> usize {
+        #[cfg(feature = "bevy")]
+        return self.i.size().x as usize;
+
+        #[cfg(not(feature = "bevy"))]
+        return self.i.width() as usize;
+    }
+
+    fn height(&self) -> usize {
+        #[cfg(feature = "bevy")]
+        return self.i.size().y as usize;
+
+        #[cfg(not(feature = "bevy"))]
+        return self.i.height() as usize;
+    }
+
+
+    fn bytes(&self) -> &[u8] {
+        #[cfg(feature = "bevy")]
+        return &self.i.data;
+
+        #[cfg(not(feature = "bevy"))]
+        return self.i.as_bytes();
+    }
+
+
 }
 
 #[cfg(feature = "bevy")]
@@ -201,8 +231,8 @@ impl From<bevy::prelude::Image> for Edges {
 
 #[cfg(feature = "bevy")]
 impl From<&bevy::prelude::Image> for Edges {
-    fn from(i: bevy::prelude::Image) -> Edges {
-        Edges { i }
+    fn from(i: &bevy::prelude::Image) -> Edges {
+        Edges { i: i.clone() }
     }
 }
 
@@ -217,5 +247,24 @@ impl From<image::DynamicImage> for Edges {
 impl From<&image::DynamicImage> for Edges {
     fn from(i: &image::DynamicImage) -> Edges {
         Edges { i: i.clone() }
+    }
+}
+
+
+
+impl fmt::Debug for Edges {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        #[derive(Debug)]
+        #[allow(dead_code)]
+        struct EdgesDisplay {
+            pub raw: Vec<Vec<Vec2>>,
+            pub translated: Vec<Vec<Vec2>>,
+        }
+        
+        let edges_display = EdgesDisplay {
+            raw: self.image_to_edges(false),
+            translated: self.image_to_edges(false),
+        };
+        write!(f, "{:#?}", edges_display)
     }
 }

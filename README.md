@@ -8,9 +8,7 @@ get the edges of objects in images with transparency
 
 ## disclaimer
 
-this existed first as implementation over in a crate called [bevy_collider_gen](<https://github.com/shnewto/bevy_collider_gen>). at the time, that's what it seemed most useful for. this crate represents me starting to wonder whether it's useful for something else, but at the moment it the api is a bit of a nuisance to use.
-
-i'm working through how to make it less of a nuisance, and if I succeed, I'll drop in into [bevy_collider_gen](<https://github.com/shnewto/bevy_collider_gen>).
+this existed first as implementation over in a crate called [bevy_collider_gen](<https://github.com/shnewto/bevy_collider_gen>). at the time, that's what it seemed most useful for. this crate represents me starting to wonder whether it's useful for something else.
 
 ## how it works
 
@@ -23,9 +21,8 @@ after that, we need to put the coordinates in some kind of "drawing order" so wh
 crate collects all pixels, in order, that are a distance of 1 from eachother. if there are pixels that have a distance greater than 1
 from any pixel in an existing group, that pixel begins a new group.
 
-## todo
+## maybe todo?
 
-- examples
 - allow input for specifying the pixel value you want to treat as "transparency"
 
 ## license
