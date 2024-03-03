@@ -3,8 +3,5 @@
 mod edges;
 mod error;
 
-#[cfg(feature = "bevy")]
-mod bevy;
-
-pub use edges::Edges;
+pub use edges::*;
 pub use glam::Vec2;

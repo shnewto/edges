@@ -1,10 +1,10 @@
-use image::DynamicImage;
-
-use crate::error;
 use glam::Vec2;
 
 pub struct Edges {
-    i: DynamicImage,
+    #[cfg(feature = "bevy")]
+    i: bevy::prelude::Image,
+    #[cfg(not(feature = "bevy"))]
+    i: image::DynamicImage,
 }
 
 impl Edges {
@@ -192,16 +192,30 @@ impl Edges {
     }
 }
 
-impl TryFrom<DynamicImage> for Edges {
-    type Error = error::Error;
-    fn try_from(i: DynamicImage) -> Result<Edges, error::Error> {
-        Ok(Edges { i })
+#[cfg(feature = "bevy")]
+impl From<bevy::prelude::Image> for Edges {
+    fn from(i: bevy::prelude::Image) -> Edges {
+        Edges { i }
     }
 }
 
-impl TryFrom<&DynamicImage> for Edges {
-    type Error = error::Error;
-    fn try_from(i: &DynamicImage) -> Result<Edges, error::Error> {
-        Ok(Edges { i: i.clone() })
+#[cfg(feature = "bevy")]
+impl From<&bevy::prelude::Image> for Edges {
+    fn from(i: bevy::prelude::Image) -> Edges {
+        Edges { i }
+    }
+}
+
+#[cfg(not(feature = "bevy"))]
+impl From<image::DynamicImage> for Edges {
+    fn from(i: image::DynamicImage) -> Edges {
+        Edges { i }
+    }
+}
+
+#[cfg(not(feature = "bevy"))]
+impl From<&image::DynamicImage> for Edges {
+    fn from(i: &image::DynamicImage) -> Edges {
+        Edges { i: i.clone() }
     }
 }
