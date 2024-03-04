@@ -7,7 +7,7 @@ authors = ["@shnewto"]
 
 description = "a library for getting the edges of objects in images with transparency"
 readme = "README.md"
-keywords = ["image", "edge", "transparency"]
+keywords = ["image", "edge", "transparency", "sprite", "bevy"]
 
 homepage = "https://github.com/shnewto/edges"
 repository = "https://github.com/shnewto/edges"
