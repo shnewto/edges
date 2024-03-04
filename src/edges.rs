@@ -53,7 +53,7 @@ impl Edges {
             processed.push(b);
         }
 
-        self.march_edges(&processed, rows, cols, translate)
+        Edges::march_edges(&processed, rows, cols, translate)
     }
 
     /// Marching squares adjacent, walks all the pixels in the provided data and keeps track of
@@ -63,7 +63,6 @@ impl Edges {
     /// Accepts a flag indicating whether or not to translate coordinates to either side of (0,0)
     /// or leave it all in positive x,y
     pub fn march_edges(
-        &self,
         data: &[usize],
         rows: usize,
         cols: usize,
@@ -72,22 +71,22 @@ impl Edges {
         let mut edge_points: Vec<Vec2> = vec![];
 
         for d in 0..data.len() {
-            let (x, y) = self.get_xy(d, rows);
+            let (x, y) = Edges::get_xy(d, rows);
             let (c, r) = (x as isize, y as isize);
 
-            if self.get_at(r, c, rows, cols, data) == 0 {
+            if Edges::get_at(r, c, rows, cols, data) == 0 {
                 continue;
             }
 
             let neighbors = [
-                self.get_at(r + 1, c, rows, cols, data),
-                self.get_at(r - 1, c, rows, cols, data),
-                self.get_at(r, c + 1, rows, cols, data),
-                self.get_at(r, c - 1, rows, cols, data),
-                self.get_at(r + 1, c + 1, rows, cols, data),
-                self.get_at(r - 1, c - 1, rows, cols, data),
-                self.get_at(r + 1, c - 1, rows, cols, data),
-                self.get_at(r - 1, c + 1, rows, cols, data),
+                Edges::get_at(r + 1, c, rows, cols, data),
+                Edges::get_at(r - 1, c, rows, cols, data),
+                Edges::get_at(r, c + 1, rows, cols, data),
+                Edges::get_at(r, c - 1, rows, cols, data),
+                Edges::get_at(r + 1, c + 1, rows, cols, data),
+                Edges::get_at(r - 1, c - 1, rows, cols, data),
+                Edges::get_at(r + 1, c - 1, rows, cols, data),
+                Edges::get_at(r - 1, c + 1, rows, cols, data),
             ];
 
             let n: usize = neighbors.iter().sum();
@@ -97,7 +96,7 @@ impl Edges {
             }
         }
 
-        self.points_to_drawing_order(&edge_points, translate, rows, cols)
+        Edges::points_to_drawing_order(&edge_points, translate, rows, cols)
     }
 
     /// Takes a collection of coordinates and attempts to sort them according to drawing order
@@ -105,7 +104,6 @@ impl Edges {
     /// Pixel sorted so that the distance to previous and next is 1. When there is no pixel left
     /// with distance 1, another group is created and sorted the same way.
     fn points_to_drawing_order(
-        &self,
         points: &[Vec2],
         translate: bool,
         rows: usize,
@@ -124,7 +122,7 @@ impl Edges {
             let neighbor = edge_points
                 .iter()
                 .enumerate()
-                .find(|(_, p)| self.distance(prev, **p) == 1.0);
+                .find(|(_, p)| Edges::distance(prev, **p) == 1.0);
 
             if let Some((i, _)) = neighbor {
                 let next = edge_points.remove(i);
@@ -145,7 +143,7 @@ impl Edges {
         if translate {
             groups = groups
                 .into_iter()
-                .map(|p| self.translate_vec(p, rows, cols))
+                .map(|p| Edges::translate_vec(p, rows, cols))
                 .collect();
         }
 
@@ -153,20 +151,20 @@ impl Edges {
     }
 
     /// conceptual helper, access a 1D vector like it's a 2D vector
-    fn get_xy(&self, idx: usize, offset: usize) -> (f32, f32) {
+    fn get_xy(idx: usize, offset: usize) -> (f32, f32) {
         let quot = idx / offset;
         let rem = idx % offset;
         (quot as f32, rem as f32)
     }
 
     /// pythagoras, distance between two points
-    fn distance(&self, a: Vec2, b: Vec2) -> f32 {
+    fn distance(a: Vec2, b: Vec2) -> f32 {
         // d=√((x2-x1)²+(y2-y1)²)
         ((a.x - b.x).abs().powi(2) + (a.y - b.y).abs().powi(2)).sqrt()
     }
 
     /// get zero or non-zero pixel the value at given coordinate
-    fn get_at(&self, row: isize, col: isize, rows: usize, cols: usize, data: &[usize]) -> usize {
+    fn get_at(row: isize, col: isize, rows: usize, cols: usize, data: &[usize]) -> usize {
         if row < 0 || col < 0 || row >= rows as isize || col >= cols as isize {
             0
         } else {
@@ -178,7 +176,7 @@ impl Edges {
     }
 
     /// translate point in positive x,y to either side of (0,0)
-    fn xy_translate(&self, p: Vec2, rows: usize, cols: usize) -> Vec2 {
+    fn xy_translate(p: Vec2, rows: usize, cols: usize) -> Vec2 {
         Vec2::new(
             p.x - (cols as f32 / 2. - 1.0),
             -p.y + (rows as f32 / 2. - 1.0),
@@ -186,9 +184,9 @@ impl Edges {
     }
 
     /// Translate vector of points in positive x,y to either side of (0,0)
-    pub fn translate_vec(&self, v: Vec<Vec2>, rows: usize, cols: usize) -> Vec<Vec2> {
+    pub fn translate_vec(v: Vec<Vec2>, rows: usize, cols: usize) -> Vec<Vec2> {
         v.into_iter()
-            .map(|p| self.xy_translate(p, rows, cols))
+            .map(|p| Edges::xy_translate(p, rows, cols))
             .collect()
     }
 
@@ -261,7 +259,7 @@ impl fmt::Debug for Edges {
 }
 
 #[cfg(feature = "bevy")]
-mod test {
+mod tests {
     #[allow(unused_imports)]
     use super::Edges;
     #[allow(unused_imports)]
