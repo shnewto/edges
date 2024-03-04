@@ -18,5 +18,5 @@ fn main() {
 
     // get the image's edges
     let edges = Edges::from(image.unwrap());
-    println!("{:#?}", edges);
+    println!("{:#?}", edges.single_image_edge_translated());
 }

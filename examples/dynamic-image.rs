@@ -3,8 +3,6 @@ use std::path::Path;
 
 fn main() {
     let image = image::open(Path::new("assets/car.png"));
-
-    // get the image's edges
     let edges = Edges::from(image.unwrap());
-    println!("{:#?}", edges);
+    println!("{:#?}", edges.single_image_edge_translated());
 }

@@ -6,6 +6,19 @@
 
 get the edges of objects in images with transparency
 
+# using
+
+```rust
+use edges::Edges;
+use std::path::Path;
+
+fn main() {
+    let image = image::open(Path::new("assets/car.png"));
+    let edges = Edges::from(image.unwrap());
+    println!("{:#?}", edges.single_image_edge_translated());
+}
+```
+
 ## disclaimer
 
 this existed first as implementation over in a crate called [bevy_collider_gen](<https://github.com/shnewto/bevy_collider_gen>). at the time, that's what it seemed most useful for. this crate represents me starting to wonder whether it's useful for something else.

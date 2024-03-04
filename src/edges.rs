@@ -12,30 +12,30 @@ impl Edges {
     /// If there's only one sprite / object in the image, this returns just one, with
     /// coordinates translated to either side of (0, 0)
     pub fn single_image_edge_translated(&self) -> Vec<Vec2> {
-        self.image_to_edges(true).into_iter().flatten().collect()
+        self.image_edges(true).into_iter().flatten().collect()
     }
 
     /// If there's only one sprite / object in the image, this returns just one, with
     /// coordinates left alone and all in positive x and y
     pub fn single_image_edge_raw(&self) -> Vec<Vec2> {
-        self.image_to_edges(false).into_iter().flatten().collect()
+        self.image_edges(false).into_iter().flatten().collect()
     }
 
     /// If there's more than one sprite / object in the image, this returns all it finds, with
     /// coordinates translated to either side of (0, 0)
     pub fn multi_image_edge_translated(&self) -> Vec<Vec<Vec2>> {
-        self.image_to_edges(true)
+        self.image_edges(true)
     }
 
     /// If there's more than one sprite / object in the image, this returns all it finds, with
     /// coordinates left alone and all in positive x and y
     pub fn multi_image_edges_raw(&self) -> Vec<Vec<Vec2>> {
-        self.image_to_edges(false)
+        self.image_edges(false)
     }
 
     /// Takes a Bevy DynamicImage type and an boolean to indicate whether to translate
     /// the points you get back to either side of (0, 0) instead of everything in positive x and y
-    pub fn image_to_edges(&self, translate: bool) -> Vec<Vec<Vec2>> {
+    pub fn image_edges(&self, translate: bool) -> Vec<Vec<Vec2>> {
         let rows = self.height();
         let cols = self.width();
         let data: &[u8] = self.bytes();
@@ -253,8 +253,8 @@ impl fmt::Debug for Edges {
         }
 
         let edges_display = EdgesDisplay {
-            raw: self.image_to_edges(false),
-            translated: self.image_to_edges(false),
+            raw: self.image_edges(false),
+            translated: self.image_edges(false),
         };
         write!(f, "{:#?}", edges_display)
     }
