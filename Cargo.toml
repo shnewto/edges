@@ -15,7 +15,7 @@ repository = "https://github.com/shnewto/edges"
 license = "MIT OR Apache-2.0"
 
 [features]
-default=[]
+default=["bevy"]
 bevy=["dep:bevy"]
 
 [dependencies]

@@ -244,7 +244,6 @@ impl From<&image::DynamicImage> for Edges {
 impl fmt::Debug for Edges {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         #[derive(Debug)]
-        #[allow(dead_code)]
         struct EdgesDisplay {
             raw: Vec<Vec<Vec2>>,
             translated: Vec<Vec<Vec2>>,
@@ -260,11 +259,8 @@ impl fmt::Debug for Edges {
 
 #[cfg(feature = "bevy")]
 mod tests {
-    #[allow(unused_imports)]
     use super::Edges;
-    #[allow(unused_imports)]
     use bevy::{prelude::Image, render::texture::ImageType};
-    #[allow(unused_imports)]
     use std::path::Path;
 
     #[test]
