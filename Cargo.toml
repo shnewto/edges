@@ -25,6 +25,8 @@ thiserror = "1.0.57"
 
 [dependencies.bevy]
 version = "0.13.0"
+default-features = false
+features = ["bevy_render"]
 optional = true
 
 [[example]]
