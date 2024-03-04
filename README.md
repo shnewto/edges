@@ -24,10 +24,6 @@ fn main() {
 }
 ```
 
-## disclaimer
-
-this existed first as implementation over in a crate called [bevy_collider_gen](<https://github.com/shnewto/bevy_collider_gen>). at the time, that's what it seemed most useful for. this crate represents me starting to wonder whether it's useful for something else.
-
 ## how it works
 
 i was inspired by [a coding train (or, coding in the cabana rather) on an implementation of "marching squares"](<https://youtu.be/0ZONMNUKTfU>).
