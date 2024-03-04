@@ -39,6 +39,7 @@ jobs:
     needs: [format]
     runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v2
       - name: cargo test
         run: cargo test --features bevy
 
