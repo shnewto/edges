@@ -4,9 +4,14 @@
 
 # edges
 
-get the edges of objects in images with transparency
+get the edges of objects in images with transparency.
 
-# using
+## supported image types
+
+- `image::DynamicImage`
+- `bevy::render::texture::Image` (or if you rather, `bevy::prelude::Image`)
+
+## using
 
 ```rust
 use edges::Edges;
@@ -33,10 +38,6 @@ or all the bytes for each pixel and, in images with transparency, "empty" is a z
 after that, we need to put the coordinates in some kind of "drawing order" so whatever we pass all the points to, knows how we want the object constructed. for this, the
 crate collects all pixels, in order, that are a distance of 1 from eachother. if there are pixels that have a distance greater than 1
 from any pixel in an existing group, that pixel begins a new group.
-
-## maybe todo?
-
-- allow input for specifying the pixel value you want to treat as "transparency"
 
 ## license
 
