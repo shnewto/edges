@@ -1,18 +1,17 @@
-use bevy::render::texture::{Image, ImageType};
+use bevy::{prelude::Image, render::texture::ImageType};
 use edges::Edges;
 
+// in an actual bevy app, you wouldn't need all this building an Image from scratch logic,
+// it'd be something closer to this:
+// `let image = image_assets.get(handle).unwrap();`
+//  let e = Edges::from(image);
 fn main() {
-    // in an actual bevy app, you wouldn't need all this building an Image from scratch logic,
-    // it'd be something closer to this:
-    // `let image = image_assets.get(handle).unwrap();`
-    //  let e = Edges::from(image);
-
     // read png as bytes and manually construct a bevy Image
     let image = Image::from_buffer(
-        include_bytes!("../assets/car.png"), // buffer
+        include_bytes!("../assets/car.png"),
         ImageType::Extension("png"),
         Default::default(),
-        true, //
+        true,
         Default::default(),
         Default::default(),
     );

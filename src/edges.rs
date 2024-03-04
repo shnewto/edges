@@ -2,12 +2,10 @@ use std::fmt;
 
 use glam::Vec2;
 
-#[derive(Default)]
-pub struct Edges {
+pub enum Edges {
+    DynamicImage(image::DynamicImage),
     #[cfg(feature = "bevy")]
-    i: bevy::prelude::Image,
-    #[cfg(not(feature = "bevy"))]
-    i: image::DynamicImage,
+    BevyImage(bevy::prelude::Image),
 }
 
 impl Edges {
@@ -195,76 +193,131 @@ impl Edges {
     }
 
     fn width(&self) -> usize {
-        #[cfg(feature = "bevy")]
-        return self.i.size().x as usize;
-
-        #[cfg(not(feature = "bevy"))]
-        return self.i.width() as usize;
+        match self {
+            Edges::DynamicImage(i) => i.width() as usize,
+            #[cfg(feature = "bevy")]
+            Edges::BevyImage(i) => i.size().x as usize,
+        }
     }
 
     fn height(&self) -> usize {
-        #[cfg(feature = "bevy")]
-        return self.i.size().y as usize;
-
-        #[cfg(not(feature = "bevy"))]
-        return self.i.height() as usize;
+        match self {
+            Edges::DynamicImage(i) => i.height() as usize,
+            #[cfg(feature = "bevy")]
+            Edges::BevyImage(i) => i.size().y as usize,
+        }
     }
-
 
     fn bytes(&self) -> &[u8] {
-        #[cfg(feature = "bevy")]
-        return &self.i.data;
-
-        #[cfg(not(feature = "bevy"))]
-        return self.i.as_bytes();
+        match self {
+            Edges::DynamicImage(i) => i.as_bytes(),
+            #[cfg(feature = "bevy")]
+            Edges::BevyImage(i) => &i.data,
+        }
     }
-
-
 }
 
 #[cfg(feature = "bevy")]
 impl From<bevy::prelude::Image> for Edges {
     fn from(i: bevy::prelude::Image) -> Edges {
-        Edges { i }
+        Edges::BevyImage(i)
     }
 }
 
 #[cfg(feature = "bevy")]
 impl From<&bevy::prelude::Image> for Edges {
     fn from(i: &bevy::prelude::Image) -> Edges {
-        Edges { i: i.clone() }
+        Edges::BevyImage(i.clone())
     }
 }
 
-#[cfg(not(feature = "bevy"))]
 impl From<image::DynamicImage> for Edges {
     fn from(i: image::DynamicImage) -> Edges {
-        Edges { i }
+        Edges::DynamicImage(i)
     }
 }
 
-#[cfg(not(feature = "bevy"))]
 impl From<&image::DynamicImage> for Edges {
     fn from(i: &image::DynamicImage) -> Edges {
-        Edges { i: i.clone() }
+        Edges::DynamicImage(i.clone())
     }
 }
-
-
 
 impl fmt::Debug for Edges {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         #[derive(Debug)]
         #[allow(dead_code)]
         struct EdgesDisplay {
-            pub raw: Vec<Vec<Vec2>>,
-            pub translated: Vec<Vec<Vec2>>,
+            raw: Vec<Vec<Vec2>>,
+            translated: Vec<Vec<Vec2>>,
         }
-        
+
         let edges_display = EdgesDisplay {
             raw: self.image_to_edges(false),
             translated: self.image_to_edges(false),
         };
         write!(f, "{:#?}", edges_display)
+    }
+}
+
+#[cfg(feature = "bevy")]
+mod test {
+    #[allow(unused_imports)]
+    use super::Edges;
+    #[allow(unused_imports)]
+    use bevy::{prelude::Image, render::texture::ImageType};
+    #[allow(unused_imports)]
+    use std::path::Path;
+
+    #[test]
+    fn same_image_same_edges() {
+        let dynamic_image = image::open(Path::new("assets/car.png")).unwrap();
+        let dynamic_edges = Edges::from(dynamic_image);
+
+        let bevy_image = Image::from_buffer(
+            include_bytes!("../assets/car.png"), // buffer
+            ImageType::Extension("png"),
+            Default::default(),
+            true, //
+            Default::default(),
+            Default::default(),
+        )
+        .unwrap();
+        let bevy_edges = Edges::from(bevy_image);
+
+        assert_eq!(
+            dynamic_edges.single_image_edge_raw(),
+            bevy_edges.single_image_edge_raw()
+        );
+        assert_eq!(
+            dynamic_edges.single_image_edge_translated(),
+            bevy_edges.single_image_edge_translated()
+        );
+    }
+
+    #[test]
+    fn same_images_same_edges() {
+        let dynamic_image = image::open(Path::new("assets/boulders.png")).unwrap();
+        let dynamic_edges = Edges::from(dynamic_image);
+
+        let bevy_image = Image::from_buffer(
+            include_bytes!("../assets/boulders.png"), // buffer
+            ImageType::Extension("png"),
+            Default::default(),
+            true, //
+            Default::default(),
+            Default::default(),
+        )
+        .unwrap();
+        let bevy_edges = Edges::from(bevy_image);
+
+        assert_eq!(
+            dynamic_edges.multi_image_edges_raw(),
+            bevy_edges.multi_image_edges_raw()
+        );
+        assert_eq!(
+            dynamic_edges.multi_image_edge_translated(),
+            bevy_edges.multi_image_edge_translated()
+        );
     }
 }
