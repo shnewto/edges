@@ -261,9 +261,9 @@ impl fmt::Debug for Edges {
 #[cfg(feature = "bevy")]
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-    use bevy::render::texture::{Image, ImageType};
     use crate::Edges;
+    use bevy::render::texture::{Image, ImageType};
+    use std::path::Path;
 
     #[test]
     fn same_image_same_edges() {
