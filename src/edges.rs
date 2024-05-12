@@ -1,6 +1,9 @@
 use std::fmt;
 
 use glam::Vec2;
+use hashbrown::HashSet;
+use mashmap::MashMap;
+use ordered_float::OrderedFloat;
 
 pub enum Edges {
     DynamicImage(image::DynamicImage),
@@ -109,36 +112,63 @@ impl Edges {
         rows: usize,
         cols: usize,
     ) -> Vec<Vec<Vec2>> {
-        let mut edge_points: Vec<Vec2> = points.to_vec();
-        let mut in_drawing_order: Vec<Vec2> = vec![];
         let mut groups: Vec<Vec<Vec2>> = vec![];
-        while !edge_points.is_empty() {
-            if in_drawing_order.is_empty() {
-                in_drawing_order.push(edge_points.swap_remove(0));
-            }
+        let mut in_drawing_order: Vec<Vec2> = vec![];
+        let mut drawn_points_with_counts: MashMap<(OrderedFloat<f32>, OrderedFloat<f32>), ()> =
+            MashMap::new();
+        let mut drawn_points: HashSet<(OrderedFloat<f32>, OrderedFloat<f32>)> = HashSet::new();
+        let hashable = |v: Vec2| (OrderedFloat(v.x), OrderedFloat(v.y));
+        if points.is_empty() {
+            return groups;
+        }
 
-            let prev = *in_drawing_order.last().unwrap();
+        let mut current = points[0];
+        let mut start = current;
+        in_drawing_order.push(current);
+        drawn_points_with_counts.insert(hashable(current), ());
+        drawn_points.insert(hashable(current));
 
-            let neighbor = edge_points
+        while drawn_points.len() < points.len() {
+            let neighbors = &points
                 .iter()
-                .enumerate()
-                .find(|(_, p)| Edges::distance(prev, **p) == 1.0);
+                .filter(|p| Edges::distance(current, **p) == 1.0)
+                .collect::<Vec<&Vec2>>();
 
-            if let Some((i, _)) = neighbor {
-                let next = edge_points.remove(i);
-                in_drawing_order.push(next);
-                continue;
+            if let Some(p) = neighbors
+                .iter()
+                .min_by_key(|n| drawn_points_with_counts.get_iter(&hashable(***n)).count())
+            {
+                current = **p;
+                in_drawing_order.push(**p);
+                drawn_points_with_counts.insert(hashable(**p), ());
+                drawn_points.insert(hashable(**p));
             }
 
-            if !in_drawing_order.is_empty() {
+            // we've traversed and backtracked and we're back at the start without reaching the end of the points
+            // so we need to start a collecting the points of a new unconnected object
+            if current == start {
+                // remove the connecting coordinate
+                _ = in_drawing_order.pop();
                 groups.push(in_drawing_order.clone());
-                in_drawing_order.clear()
+                in_drawing_order.clear();
+                drawn_points_with_counts.clear();
+
+                if let Some(c) = points
+                    .iter()
+                    .find(|p| !drawn_points.contains(&hashable(**p)))
+                {
+                    in_drawing_order.push(*c);
+                    drawn_points_with_counts.insert(hashable(*c), ());
+                    drawn_points.insert(hashable(*c));
+                    current = *c;
+                    start = current;
+                } else {
+                    break;
+                }
             }
         }
 
-        if !in_drawing_order.is_empty() {
-            groups.push(in_drawing_order.clone());
-        }
+        groups.push(in_drawing_order.clone());
 
         if translate {
             groups = groups
