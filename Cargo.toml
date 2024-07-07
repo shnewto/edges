@@ -19,25 +19,26 @@ default=[]
 bevy=["dep:bevy"]
 
 [dependencies]
-glam = "0.25.0"
-hashbrown = "0.14.5"
-image = "0.24.9"
-mashmap = "0.1.1"
-ordered-float = "4.2.0"
-thiserror = "1.0.57"
+glam = "0.25"
+hashbrown = "0.14"
+image = "0.25"
+mashmap = "0.1"
+ordered-float = "4.2"
+thiserror = "1.0"
 
 [dependencies.bevy]
-version = "0.13.0"
+version = "0.14"
 default-features = false
 features = ["bevy_render"]
 optional = true
 
 [dev-dependencies]
-raqote = "0.8.4"
-open = "5.1.2"
+raqote = "0.8"
+open = "5.1"
 
 [[example]]
 name = "bevy-image"
+required-features = ["bevy"]
 
 [[example]]
 name = "dynamic-image"
