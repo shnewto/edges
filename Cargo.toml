@@ -19,7 +19,7 @@ default=[]
 bevy=["dep:bevy"]
 
 [dependencies]
-glam = "0.25"
+glam = "0.27.0"
 hashbrown = "0.14"
 image = "0.25"
 mashmap = "0.1"
