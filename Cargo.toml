@@ -14,15 +14,21 @@ repository = "https://github.com/shnewto/edges"
 
 license = "MIT OR Apache-2.0"
 
+[lints.clippy]
+type_complexity = { level = "allow", priority = 1 }
+needless_pass_by_value = { level = "allow", priority = 1 }
+cast_precision_loss = { level = "allow", priority = 1 }
+pedantic = { level = "warn", priority = 0 }
+
 [features]
-default=[]
-bevy=["dep:bevy"]
+default = []
+bevy = ["dep:bevy"]
 
 [dependencies]
-glam = "0.27.0"
-hashbrown = "0.14"
+glam = "0.29.0"
+hashbrown = "0.15"
 image = "0.25"
-mashmap = "0.1"
+mashmap = "0.2.1"
 ordered-float = "4.2"
 thiserror = "1.0"
 
