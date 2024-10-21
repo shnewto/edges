@@ -1,9 +1,7 @@
-use bevy::{
+use bevy_render::{
     prelude::Image,
-    render::{
-        render_asset::RenderAssetUsages,
-        texture::{CompressedImageFormats, ImageSampler, ImageType},
-    },
+    render_asset::RenderAssetUsages,
+    texture::{CompressedImageFormats, ImageSampler, ImageType},
 };
 use edges::Edges;
 use raqote::{DrawOptions, DrawTarget, PathBuilder, SolidSource, Source, StrokeStyle};
@@ -34,8 +32,8 @@ fn main() {
     )
     .unwrap();
 
-    draw_png(boulders, "boulders.png");
-    draw_png(more_lines, "more-lines.png");
+    draw_png(boulders, "boulders");
+    draw_png(more_lines, "more-lines");
 }
 
 fn draw_png(image: Image, img_path: &str) {
