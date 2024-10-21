@@ -29,7 +29,6 @@ bevy = ["dep:bevy_math", "dep:bevy_render"]
 hashbrown = "0.15"
 image = "0.25"
 mashmap = "0.2"
-ordered-float = "4.2"
 thiserror = "1.0"
 
 [dependencies.glam]

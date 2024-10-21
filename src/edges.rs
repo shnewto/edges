@@ -6,7 +6,8 @@ use std::fmt;
 
 use hashbrown::HashSet;
 use mashmap::MashMap;
-use ordered_float::OrderedFloat;
+
+type Point = (usize, usize);
 
 pub struct Edges {
     data: Vec<u8>,
@@ -17,33 +18,24 @@ pub struct Edges {
 impl Edges {
     #[must_use]
     pub fn new(height: usize, width: usize, data: &[u8]) -> Self {
-        let new = Self {
+        Self {
             height,
             width,
             data: {
-                let binary = if data.len() > (height * width) {
-                    let mut binary = Vec::with_capacity(height * width);
-                    let compress_step = data.len() / (height * width);
-                    for i in (0..data.len()).step_by(compress_step) {
-                        binary.push(data[i..i + compress_step].iter().any(|i| *i > 0));
-                    }
-                    binary
-                } else {
-                    data.iter().map(|i| *i > 0).collect()
-                };
-                let mut compressed = Vec::with_capacity(height * width / 8);
-                for i in (0..binary.len()).step_by(8) {
-                    let mut byte = 0;
-                    for bit in &binary[i..i + 7] {
-                        byte += u8::from(*bit);
-                        byte <<= 1;
-                    }
-                    compressed.push(byte);
-                }
-                compressed
+                let compress_step = data.len() / (height * width);
+                data.chunks(compress_step)
+                    .map(|chunk| chunk.iter().any(|i| *i != 0))
+                    .collect::<Vec<bool>>()
+                    .chunks(8)
+                    .map(|byte| {
+                        byte.iter()
+                            .enumerate()
+                            .map(|(i, bit)| u8::from(*bit) << i)
+                            .sum::<u8>()
+                    })
+                    .collect()
             },
-        };
-        new
+        }
     }
     /// If there's only one sprite / object in the image, this returns just one, with
     /// coordinates translated to either side of (0, 0)
@@ -77,7 +69,7 @@ impl Edges {
     /// the points you get back to either side of (0, 0) instead of everything in positive x and y.
     #[must_use]
     pub fn image_edges(&self, translate: bool) -> Vec<Vec<Vec2>> {
-        let mut edge_points: Vec<Vec2> = Vec::new();
+        let mut edge_points = Vec::new();
         // Marching squares adjacent, walks all the pixels in the provided data and keeps track of
         // any that have at least one transparent / zero value neighbor then, while sorting into drawing
         // order, groups them into sets of connected pixels
@@ -97,7 +89,7 @@ impl Edges {
                 x > usize::MIN && y < usize::MAX && self.get(x - 1, y + 1),
             ];
             if neighbors.iter().filter(|i| **i).count() < neighbors.len() {
-                edge_points.push(Vec2::new(x as f32, y as f32));
+                edge_points.push((x, y));
             }
         }
 
@@ -108,42 +100,42 @@ impl Edges {
     ///
     /// Pixel sorted so that the distance to previous and next is 1. When there is no pixel left
     /// with distance 1, another group is created and sorted the same way.
-    fn points_to_drawing_order(&self, points: Vec<Vec2>, translate: bool) -> Vec<Vec<Vec2>> {
-        let mut groups: Vec<Vec<Vec2>> = Vec::new();
+    fn points_to_drawing_order(&self, points: Vec<Point>, translate: bool) -> Vec<Vec<Vec2>> {
+        let mut groups: Vec<Vec<Point>> = Vec::new();
         if points.is_empty() {
-            return groups;
+            return Vec::new();
         }
 
-        let mut in_drawing_order: Vec<Vec2> = Vec::new();
-        let mut drawn_points_with_counts: MashMap<(OrderedFloat<f32>, OrderedFloat<f32>), ()> =
-            MashMap::new();
-        let mut drawn_points: HashSet<(OrderedFloat<f32>, OrderedFloat<f32>)> = HashSet::new();
-        let hashable = |v: Vec2| (OrderedFloat(v.x), OrderedFloat(v.y));
+        let mut in_drawing_order: Vec<Point> = Vec::new();
+        let mut drawn_points_with_counts: MashMap<Point, ()> = MashMap::new();
+        let mut drawn_points: HashSet<Point> = HashSet::new();
+
         // d=√((x2-x1)²+(y2-y1)²)
-        let distance = |a: Vec2, b: Vec2| -> f32 {
-            ((a.x - b.x).abs().powi(2) + (a.y - b.y).abs().powi(2)).sqrt()
+        let distance = |a: Point, b: Point| -> f32 {
+            ((a.0 as f32 - b.0 as f32).abs().powi(2) + (a.1 as f32 - b.1 as f32).abs().powi(2))
+                .sqrt()
         };
 
         let mut start = points[0];
         let mut current = start;
         in_drawing_order.push(current);
-        drawn_points_with_counts.insert(hashable(current), ());
-        drawn_points.insert(hashable(current));
+        drawn_points_with_counts.insert(current, ());
+        drawn_points.insert(current);
 
         while drawn_points.len() < points.len() {
-            let neighbors = &points
+            let neighbors: Vec<&Point> = points
                 .iter()
                 .filter(|p| (distance(current, **p) - 1.0).abs() < 0.000_000_1)
-                .collect::<Vec<&Vec2>>();
+                .collect();
 
             if let Some(p) = neighbors
                 .iter()
-                .min_by_key(|n| drawn_points_with_counts.get_iter(&hashable(***n)).count())
+                .min_by_key(|n| drawn_points_with_counts.get_iter(**n).count())
             {
                 current = **p;
                 in_drawing_order.push(**p);
-                drawn_points_with_counts.insert(hashable(**p), ());
-                drawn_points.insert(hashable(**p));
+                drawn_points_with_counts.insert(**p, ());
+                drawn_points.insert(**p);
             }
 
             // we've traversed and backtracked and we're back at the start without reaching the end of the points
@@ -155,13 +147,10 @@ impl Edges {
                 in_drawing_order.clear();
                 drawn_points_with_counts.clear();
 
-                if let Some(c) = points
-                    .iter()
-                    .find(|p| !drawn_points.contains(&hashable(**p)))
-                {
+                if let Some(c) = points.iter().find(|p| !drawn_points.contains(&**p)) {
                     in_drawing_order.push(*c);
-                    drawn_points_with_counts.insert(hashable(*c), ());
-                    drawn_points.insert(hashable(*c));
+                    drawn_points_with_counts.insert(*c, ());
+                    drawn_points.insert(*c);
                     current = *c;
                     start = current;
                 } else {
@@ -172,11 +161,15 @@ impl Edges {
 
         groups.push(in_drawing_order.clone());
 
-        if translate {
-            groups = groups.into_iter().map(|p| self.translate_vec(p)).collect();
-        }
+        let groups = groups
+            .into_iter()
+            .map(|v| v.into_iter().map(|p| Vec2::new(p.0 as f32, p.1 as f32)));
 
-        groups
+        if translate {
+            groups.map(|p| self.translate(p)).collect()
+        } else {
+            groups.map(Iterator::collect).collect()
+        }
     }
 
     /// conceptual helper, access a 1D vector like it's a 2D vector
@@ -188,9 +181,9 @@ impl Edges {
 
     /// get zero or non-zero pixel the value at given coordinate
     fn get(&self, x: usize, y: usize) -> bool {
-        let index = y * self.width / 8 + x / 8;
-        if let Some(mut byte) = self.data.get(index).copied() {
-            byte >>= 7 - x % 8;
+        let index = y * self.width + x;
+        if let Some(mut byte) = self.data.get(index / 8).copied() {
+            byte >>= index % 8;
             byte & 1 > 0
         } else {
             false
@@ -207,8 +200,11 @@ impl Edges {
 
     /// Translate vector of points in positive x,y to either side of (0,0)
     #[must_use]
-    pub fn translate_vec(&self, v: Vec<Vec2>) -> Vec<Vec2> {
-        v.into_iter().map(|p| self.translate_point(p)).collect()
+    pub fn translate<T>(&self, v: T) -> Vec<Vec2>
+    where
+        T: Iterator<Item = Vec2>,
+    {
+        v.map(|p| self.translate_point(p)).collect()
     }
 }
 
