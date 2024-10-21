@@ -1,6 +1,9 @@
+#[cfg(feature = "bevy")]
+pub use bevy_math::prelude::Vec2;
+#[cfg(not(feature = "bevy"))]
+pub use glam::Vec2;
 use std::fmt;
 
-use glam::Vec2;
 use hashbrown::HashSet;
 use mashmap::MashMap;
 use ordered_float::OrderedFloat;
