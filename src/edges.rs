@@ -8,13 +8,43 @@ use hashbrown::HashSet;
 use mashmap::MashMap;
 use ordered_float::OrderedFloat;
 
-pub enum Edges {
-    DynamicImage(image::DynamicImage),
-    #[cfg(feature = "bevy")]
-    BevyImage(bevy::prelude::Image),
+pub struct Edges {
+    data: Vec<u8>,
+    height: usize,
+    width: usize,
 }
 
 impl Edges {
+    #[must_use]
+    pub fn new(height: usize, width: usize, data: &[u8]) -> Self {
+        let new = Self {
+            height,
+            width,
+            data: {
+                let binary = if data.len() > (height * width) {
+                    let mut binary = Vec::with_capacity(height * width);
+                    let compress_step = data.len() / (height * width);
+                    for i in (0..data.len()).step_by(compress_step) {
+                        binary.push(data[i..i + compress_step].iter().any(|i| *i > 0));
+                    }
+                    binary
+                } else {
+                    data.iter().map(|i| *i > 0).collect()
+                };
+                let mut compressed = Vec::with_capacity(height * width / 8);
+                for i in (0..binary.len()).step_by(8) {
+                    let mut byte = 0;
+                    for bit in &binary[i..i + 7] {
+                        byte += u8::from(*bit);
+                        byte <<= 1;
+                    }
+                    compressed.push(byte);
+                }
+                compressed
+            },
+        };
+        new
+    }
     /// If there's only one sprite / object in the image, this returns just one, with
     /// coordinates translated to either side of (0, 0)
     #[must_use]
@@ -43,95 +73,59 @@ impl Edges {
         self.image_edges(false)
     }
 
-    /// Takes a Bevy DynamicImage type and an boolean to indicate whether to translate
-    /// the points you get back to either side of (0, 0) instead of everything in positive x and y
+    /// Takes `Edges` and a boolean to indicate whether to translate
+    /// the points you get back to either side of (0, 0) instead of everything in positive x and y.
     #[must_use]
     pub fn image_edges(&self, translate: bool) -> Vec<Vec<Vec2>> {
-        let rows = self.height();
-        let cols = self.width();
-        let data: &[u8] = self.bytes();
-        let mut byte_combine_step: usize = 1;
-        if (rows * cols) < data.len() {
-            byte_combine_step = data.len() / (rows * cols);
-        }
-
-        let mut processed: Vec<usize> = vec![];
-        for i in (0..data.len()).step_by(byte_combine_step) {
-            let mut b: usize = 0;
-            for j in 0..byte_combine_step {
-                b |= data[i + j] as usize; // just need to retain any non-zero values
-            }
-            processed.push(b);
-        }
-
-        Edges::march_edges(&processed, rows, cols, translate)
-    }
-
-    /// Marching squares adjacent, walks all the pixels in the provided data and keeps track of
-    /// any that have at least one transparent / zero value neighbor then, while sorting into drawing
-    /// order, groups them into sets of connected pixels
-    ///
-    /// Accepts a flag indicating whether or not to translate coordinates to either side of (0,0)
-    /// or leave it all in positive x,y
-    pub fn march_edges(
-        data: &[usize],
-        rows: usize,
-        cols: usize,
-        translate: bool,
-    ) -> Vec<Vec<Vec2>> {
-        let mut edge_points: Vec<Vec2> = vec![];
-
-        for d in 0..data.len() {
-            let (x, y) = Edges::get_xy(d, rows);
-            let (c, r) = (x as isize, y as isize);
-
-            if Edges::get_at(r, c, rows, cols, data) == 0 {
+        let mut edge_points: Vec<Vec2> = Vec::new();
+        // Marching squares adjacent, walks all the pixels in the provided data and keeps track of
+        // any that have at least one transparent / zero value neighbor then, while sorting into drawing
+        // order, groups them into sets of connected pixels
+        for i in 0..self.width * self.height {
+            let (x, y) = self.get_pos(i);
+            if !self.get(x, y) {
                 continue;
             }
-
             let neighbors = [
-                Edges::get_at(r + 1, c, rows, cols, data),
-                Edges::get_at(r - 1, c, rows, cols, data),
-                Edges::get_at(r, c + 1, rows, cols, data),
-                Edges::get_at(r, c - 1, rows, cols, data),
-                Edges::get_at(r + 1, c + 1, rows, cols, data),
-                Edges::get_at(r - 1, c - 1, rows, cols, data),
-                Edges::get_at(r + 1, c - 1, rows, cols, data),
-                Edges::get_at(r - 1, c + 1, rows, cols, data),
+                y < usize::MAX && self.get(x, y + 1),
+                y > usize::MIN && self.get(x, y - 1),
+                x < usize::MAX && self.get(x + 1, y),
+                x > usize::MIN && self.get(x - 1, y),
+                x < usize::MAX && y < usize::MAX && self.get(x + 1, y + 1),
+                x > usize::MIN && y > usize::MIN && self.get(x - 1, y - 1),
+                x < usize::MAX && y > usize::MIN && self.get(x + 1, y - 1),
+                x > usize::MIN && y < usize::MAX && self.get(x - 1, y + 1),
             ];
-
-            let n: usize = neighbors.iter().sum();
-            let surrounded = neighbors.len();
-            if n < surrounded {
-                edge_points.push(Vec2::new(x, y));
+            if neighbors.iter().filter(|i| **i).count() < neighbors.len() {
+                edge_points.push(Vec2::new(x as f32, y as f32));
             }
         }
 
-        Edges::points_to_drawing_order(&edge_points, translate, rows, cols)
+        self.points_to_drawing_order(edge_points, translate)
     }
 
     /// Takes a collection of coordinates and attempts to sort them according to drawing order
     ///
     /// Pixel sorted so that the distance to previous and next is 1. When there is no pixel left
     /// with distance 1, another group is created and sorted the same way.
-    fn points_to_drawing_order(
-        points: &[Vec2],
-        translate: bool,
-        rows: usize,
-        cols: usize,
-    ) -> Vec<Vec<Vec2>> {
-        let mut groups: Vec<Vec<Vec2>> = vec![];
-        let mut in_drawing_order: Vec<Vec2> = vec![];
-        let mut drawn_points_with_counts: MashMap<(OrderedFloat<f32>, OrderedFloat<f32>), ()> =
-            MashMap::new();
-        let mut drawn_points: HashSet<(OrderedFloat<f32>, OrderedFloat<f32>)> = HashSet::new();
-        let hashable = |v: Vec2| (OrderedFloat(v.x), OrderedFloat(v.y));
+    fn points_to_drawing_order(&self, points: Vec<Vec2>, translate: bool) -> Vec<Vec<Vec2>> {
+        let mut groups: Vec<Vec<Vec2>> = Vec::new();
         if points.is_empty() {
             return groups;
         }
 
-        let mut current = points[0];
-        let mut start = current;
+        let mut in_drawing_order: Vec<Vec2> = Vec::new();
+        let mut drawn_points_with_counts: MashMap<(OrderedFloat<f32>, OrderedFloat<f32>), ()> =
+            MashMap::new();
+        let mut drawn_points: HashSet<(OrderedFloat<f32>, OrderedFloat<f32>)> = HashSet::new();
+        let hashable = |v: Vec2| (OrderedFloat(v.x), OrderedFloat(v.y));
+        // d=√((x2-x1)²+(y2-y1)²)
+        let distance = |a: Vec2, b: Vec2| -> f32 {
+            ((a.x - b.x).abs().powi(2) + (a.y - b.y).abs().powi(2)).sqrt()
+        };
+
+        let mut start = points[0];
+        let mut current = start;
         in_drawing_order.push(current);
         drawn_points_with_counts.insert(hashable(current), ());
         drawn_points.insert(hashable(current));
@@ -139,7 +133,7 @@ impl Edges {
         while drawn_points.len() < points.len() {
             let neighbors = &points
                 .iter()
-                .filter(|p| Edges::distance(current, **p) == 1.0)
+                .filter(|p| (distance(current, **p) - 1.0).abs() < 0.000_000_1)
                 .collect::<Vec<&Vec2>>();
 
             if let Some(p) = neighbors
@@ -179,103 +173,65 @@ impl Edges {
         groups.push(in_drawing_order.clone());
 
         if translate {
-            groups = groups
-                .into_iter()
-                .map(|p| Edges::translate_vec(p, rows, cols))
-                .collect();
+            groups = groups.into_iter().map(|p| self.translate_vec(p)).collect();
         }
 
         groups
     }
 
     /// conceptual helper, access a 1D vector like it's a 2D vector
-    fn get_xy(idx: usize, offset: usize) -> (f32, f32) {
-        let quot = idx / offset;
-        let rem = idx % offset;
-        (quot as f32, rem as f32)
-    }
-
-    /// pythagoras, distance between two points
-    fn distance(a: Vec2, b: Vec2) -> f32 {
-        // d=√((x2-x1)²+(y2-y1)²)
-        ((a.x - b.x).abs().powi(2) + (a.y - b.y).abs().powi(2)).sqrt()
+    fn get_pos(&self, index: usize) -> (usize, usize) {
+        let quot = index / self.height;
+        let rem = index % self.height;
+        (quot, rem)
     }
 
     /// get zero or non-zero pixel the value at given coordinate
-    fn get_at(row: isize, col: isize, rows: usize, cols: usize, data: &[usize]) -> usize {
-        if row < 0 || col < 0 || row >= rows as isize || col >= cols as isize {
-            0
+    fn get(&self, x: usize, y: usize) -> bool {
+        let index = y * self.width / 8 + x / 8;
+        if let Some(mut byte) = self.data.get(index).copied() {
+            byte >>= 7 - x % 8;
+            byte & 1 > 0
         } else {
-            let idx = row as usize * cols + col as usize;
-            data.get(idx)
-                .map(|i| if *i == 0 { 0 } else { 1 })
-                .unwrap_or_else(|| 0)
+            false
         }
     }
 
     /// translate point in positive x,y to either side of (0,0)
-    fn xy_translate(p: Vec2, rows: usize, cols: usize) -> Vec2 {
+    fn translate_point(&self, p: Vec2) -> Vec2 {
         Vec2::new(
-            p.x - (cols as f32 / 2. - 1.0),
-            -p.y + (rows as f32 / 2. - 1.0),
+            p.x - (self.width as f32 / 2.0 - 1.0),
+            (self.height as f32 / 2.0 - 1.0) - p.y,
         )
     }
 
     /// Translate vector of points in positive x,y to either side of (0,0)
-    pub fn translate_vec(v: Vec<Vec2>, rows: usize, cols: usize) -> Vec<Vec2> {
-        v.into_iter()
-            .map(|p| Edges::xy_translate(p, rows, cols))
-            .collect()
-    }
-
-    fn width(&self) -> usize {
-        match self {
-            Edges::DynamicImage(i) => i.width() as usize,
-            #[cfg(feature = "bevy")]
-            Edges::BevyImage(i) => i.size().x as usize,
-        }
-    }
-
-    fn height(&self) -> usize {
-        match self {
-            Edges::DynamicImage(i) => i.height() as usize,
-            #[cfg(feature = "bevy")]
-            Edges::BevyImage(i) => i.size().y as usize,
-        }
-    }
-
-    fn bytes(&self) -> &[u8] {
-        match self {
-            Edges::DynamicImage(i) => i.as_bytes(),
-            #[cfg(feature = "bevy")]
-            Edges::BevyImage(i) => &i.data,
-        }
+    #[must_use]
+    pub fn translate_vec(&self, v: Vec<Vec2>) -> Vec<Vec2> {
+        v.into_iter().map(|p| self.translate_point(p)).collect()
     }
 }
 
 #[cfg(feature = "bevy")]
-impl From<bevy::prelude::Image> for Edges {
-    fn from(i: bevy::prelude::Image) -> Edges {
-        Edges::BevyImage(i)
-    }
-}
-
-#[cfg(feature = "bevy")]
-impl From<&bevy::prelude::Image> for Edges {
-    fn from(i: &bevy::prelude::Image) -> Edges {
-        Edges::BevyImage(i.clone())
+impl From<bevy_render::prelude::Image> for Edges {
+    fn from(i: bevy_render::prelude::Image) -> Edges {
+        Self::new(i.height() as usize, i.width() as usize, &i.data)
     }
 }
 
 impl From<image::DynamicImage> for Edges {
     fn from(i: image::DynamicImage) -> Edges {
-        Edges::DynamicImage(i)
+        Self::new(i.height() as usize, i.width() as usize, i.as_bytes())
     }
 }
 
-impl From<&image::DynamicImage> for Edges {
-    fn from(i: &image::DynamicImage) -> Edges {
-        Edges::DynamicImage(i.clone())
+impl<T> From<&T> for Edges
+where
+    T: Clone,
+    Edges: From<T>,
+{
+    fn from(value: &T) -> Self {
+        Self::from(value.clone())
     }
 }
 
