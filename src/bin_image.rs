@@ -2,13 +2,13 @@ use crate::{utils::Point, Vec2};
 
 pub struct BinImage {
     data: Vec<u8>,
-    pub height: usize,
-    pub width: usize,
+    pub height: u32,
+    pub width: u32,
 }
 
 impl BinImage {
-    pub fn new(height: usize, width: usize, data: &[u8]) -> Self {
-        let compress_step = data.len() / (height * width);
+    pub fn new(height: u32, width: u32, data: &[u8]) -> Self {
+        let compress_step = data.len() / (height * width) as usize;
         Self {
             data: data
                 .chunks(8 * compress_step)
@@ -29,7 +29,11 @@ impl BinImage {
     /// get pixel value at given coordinate
     pub fn get(&self, (x, y): Point) -> bool {
         let index = y * self.width + x;
-        if let Some(mut byte) = self.data.get(index / 8 /* index of byte */).copied() {
+        if let Some(mut byte) = self
+            .data
+            .get((index / 8) as usize /* index of byte */)
+            .copied()
+        {
             byte >>= index % 8; // index of bit
             x <= self.width && byte & 1 > 0
         } else {
@@ -39,14 +43,14 @@ impl BinImage {
 
     pub fn get_neighbors(&self, (x, y): Point) -> [bool; 8] {
         [
-            y < usize::MAX && self.get((x, y + 1)),
-            y > usize::MIN && self.get((x, y - 1)),
-            x < usize::MAX && self.get((x + 1, y)),
-            x > usize::MIN && self.get((x - 1, y)),
-            x < usize::MAX && y < usize::MAX && self.get((x + 1, y + 1)),
-            x > usize::MIN && y > usize::MIN && self.get((x - 1, y - 1)),
-            x < usize::MAX && y > usize::MIN && self.get((x + 1, y - 1)),
-            x > usize::MIN && y < usize::MAX && self.get((x - 1, y + 1)),
+            y < u32::MAX && self.get((x, y + 1)),
+            y > u32::MIN && self.get((x, y - 1)),
+            x < u32::MAX && self.get((x + 1, y)),
+            x > u32::MIN && self.get((x - 1, y)),
+            x < u32::MAX && y < u32::MAX && self.get((x + 1, y + 1)),
+            x > u32::MIN && y > u32::MIN && self.get((x - 1, y - 1)),
+            x < u32::MAX && y > u32::MIN && self.get((x + 1, y - 1)),
+            x > u32::MIN && y < u32::MAX && self.get((x - 1, y + 1)),
         ]
     }
 

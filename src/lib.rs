@@ -23,11 +23,12 @@ pub struct Edges {
 
 impl Edges {
     #[must_use]
-    pub fn new(height: usize, width: usize, data: &[u8]) -> Self {
+    pub fn new(height: u32, width: u32, data: &[u8]) -> Self {
         Self {
             image: BinImage::new(height, width, data),
         }
     }
+
     /// If there's only one sprite / object in the image, this returns just one, with
     /// coordinates translated to either side of (0, 0)
     #[must_use]
@@ -94,7 +95,7 @@ impl Edges {
         while drawn_points_with_counts.len() < points.len() {
             if let Some(p) = points
                 .iter()
-                .filter(|p| (distance(current, p) - 1.0).abs() <= f32::EPSILON)
+                .filter(|p| (distance(current, **p) - 1.0).abs() <= f32::EPSILON)
                 .min_by_key(|n| drawn_points_with_counts.get(n).map_or(0, |c| *c))
             {
                 current = *p;
@@ -147,23 +148,26 @@ impl Edges {
 #[cfg(feature = "bevy")]
 impl From<bevy_render::prelude::Image> for Edges {
     fn from(i: bevy_render::prelude::Image) -> Edges {
-        Self::new(i.height() as usize, i.width() as usize, &i.data)
+        Self::new(i.height(), i.width(), &i.data)
     }
 }
 
 impl From<image::DynamicImage> for Edges {
     fn from(i: image::DynamicImage) -> Edges {
-        Self::new(i.height() as usize, i.width() as usize, i.as_bytes())
+        Self::new(i.height(), i.width(), i.as_bytes())
     }
 }
 
-impl<T> From<&T> for Edges
-where
-    T: Clone,
-    Edges: From<T>,
-{
-    fn from(value: &T) -> Self {
-        Self::from(value.clone())
+#[cfg(feature = "bevy")]
+impl From<&bevy_render::prelude::Image> for Edges {
+    fn from(i: &bevy_render::prelude::Image) -> Edges {
+        Self::new(i.height(), i.width(), &i.data)
+    }
+}
+
+impl From<&image::DynamicImage> for Edges {
+    fn from(i: &image::DynamicImage) -> Edges {
+        Self::new(i.height(), i.width(), i.as_bytes())
     }
 }
 
