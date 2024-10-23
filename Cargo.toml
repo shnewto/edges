@@ -26,10 +26,7 @@ glam-latest = ["dep:glam"]
 bevy = ["dep:bevy_math", "dep:bevy_render"]
 
 [dependencies]
-hashbrown = "0.15"
 image = "0.25"
-mashmap = "0.2"
-thiserror = "1.0"
 
 [dependencies.glam]
 version = "0.29"
