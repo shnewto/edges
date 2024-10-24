@@ -1,4 +1,4 @@
-use crate::{utils::Point, Vec2};
+use crate::{UVec2, Vec2};
 
 pub struct BinImage {
     data: Vec<u8>,
@@ -8,6 +8,10 @@ pub struct BinImage {
 
 impl BinImage {
     pub fn new(height: u32, width: u32, data: &[u8]) -> Self {
+        assert!(
+            data.len() >= (height * width) as usize,
+            "data must not be smaller than image dimensions"
+        );
         let compress_step = data.len() / (height * width) as usize;
         Self {
             data: data
@@ -26,12 +30,12 @@ impl BinImage {
         }
     }
 
-    /// get pixel value at given coordinate
-    pub fn get(&self, (x, y): Point) -> bool {
+    pub fn get(&self, p: UVec2) -> bool {
+        let (x, y) = (p.x, p.y);
         let index = y * self.width + x;
         if let Some(mut byte) = self
             .data
-            .get((index / 8) as usize /* index of byte */)
+            .get((index / 8) as usize) // index of byte
             .copied()
         {
             byte >>= index % 8; // index of bit
@@ -41,16 +45,17 @@ impl BinImage {
         }
     }
 
-    pub fn get_neighbors(&self, (x, y): Point) -> [bool; 8] {
+    pub fn get_neighbors(&self, p: UVec2) -> [bool; 8] {
+        let (x, y) = (p.x, p.y);
         [
-            y < u32::MAX && self.get((x, y + 1)),
-            y > u32::MIN && self.get((x, y - 1)),
-            x < u32::MAX && self.get((x + 1, y)),
-            x > u32::MIN && self.get((x - 1, y)),
-            x < u32::MAX && y < u32::MAX && self.get((x + 1, y + 1)),
-            x > u32::MIN && y > u32::MIN && self.get((x - 1, y - 1)),
-            x < u32::MAX && y > u32::MIN && self.get((x + 1, y - 1)),
-            x > u32::MIN && y < u32::MAX && self.get((x - 1, y + 1)),
+            y < u32::MAX && self.get((x, y + 1).into()), // North
+            y > u32::MIN && self.get((x, y - 1).into()), // South
+            x < u32::MAX && self.get((x + 1, y).into()), // East
+            x > u32::MIN && self.get((x - 1, y).into()), // West
+            x < u32::MAX && y < u32::MAX && self.get((x + 1, y + 1).into()), // Northeast
+            x > u32::MIN && y > u32::MIN && self.get((x - 1, y - 1).into()), // Southwest
+            x < u32::MAX && y > u32::MIN && self.get((x + 1, y - 1).into()), // Southeast
+            x > u32::MIN && y < u32::MAX && self.get((x - 1, y + 1).into()), // Northwest
         ]
     }
 
@@ -62,8 +67,6 @@ impl BinImage {
         )
     }
 
-    /// Translate iterator of points in positive x,y to either side of (0,0)
-    #[must_use]
     pub fn translate<T>(&self, v: T) -> Vec<Vec2>
     where
         T: Iterator<Item = Vec2>,

@@ -1,15 +1,12 @@
 #![doc = include_str!("../README.md")]
 
 #[cfg(feature = "bevy")]
-pub use bevy_math::prelude::Vec2;
+pub use bevy_math::prelude::{UVec2, Vec2};
 #[cfg(not(feature = "bevy"))]
-pub use glam::Vec2;
+pub use glam::{UVec2, Vec2};
 use std::{collections::HashMap, fmt};
 
-use crate::{
-    bin_image::BinImage,
-    utils::{distance, Point},
-};
+use crate::{bin_image::BinImage, utils::distance};
 
 mod bin_image;
 #[cfg(feature = "bevy")]
@@ -67,6 +64,7 @@ impl Edges {
         // order, groups them into sets of connected pixels
         let edge_points = (0..image.height * image.width)
             .map(|i| (i / image.height, i % image.height))
+            .map(|(x, y)| UVec2::new(x, y))
             .filter(|p| image.get(*p))
             .filter(|p| (0..8).contains(&image.get_neighbors(*p).iter().filter(|i| **i).count()))
             .collect();
@@ -78,13 +76,13 @@ impl Edges {
     ///
     /// Pixel sorted so that the distance to previous and next is 1. When there is no pixel left
     /// with distance 1, another group is created and sorted the same way.
-    fn points_to_drawing_order(&self, points: Vec<Point>, translate: bool) -> Vec<Vec<Vec2>> {
+    fn points_to_drawing_order(&self, points: Vec<UVec2>, translate: bool) -> Vec<Vec<Vec2>> {
         if points.is_empty() {
             return Vec::new();
         }
 
-        let mut groups: Vec<Vec<Point>> = Vec::new();
-        let mut group: Vec<Point> = Vec::new();
+        let mut groups: Vec<Vec<UVec2>> = Vec::new();
+        let mut group: Vec<UVec2> = Vec::new();
         let mut drawn_points_with_counts = HashMap::new();
 
         let mut start = points[0];
@@ -95,7 +93,7 @@ impl Edges {
         while drawn_points_with_counts.len() < points.len() {
             if let Some(p) = points
                 .iter()
-                .filter(|p| (distance(current, **p) - 1.0).abs() <= f32::EPSILON)
+                .filter(|p| (distance(current.as_vec2(), p.as_vec2()) - 1.0).abs() <= f32::EPSILON)
                 .min_by_key(|n| drawn_points_with_counts.get(n).map_or(0, |c| *c))
             {
                 current = *p;
@@ -135,7 +133,7 @@ impl Edges {
 
         let groups = groups
             .into_iter()
-            .map(|v| v.into_iter().map(|(x, y)| Vec2::new(x as f32, y as f32)));
+            .map(|v| v.into_iter().map(|p| p.as_vec2()));
 
         if translate {
             groups.map(|p| self.image.translate(p)).collect()
