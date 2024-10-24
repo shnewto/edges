@@ -7,6 +7,25 @@ pub struct BinImage {
 }
 
 impl BinImage {
+    /// Creates a new `BinImage` from the given height, width, and raw pixel data.
+    ///
+    /// # Arguments
+    ///
+    /// * `height` - The height of the image in pixels.
+    /// * `width` - The width of the image in pixels.
+    /// * `data` - A slice of bytes representing the raw pixel data. The length of this slice
+    ///   must be at least `height * width`.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the length of `data` is less than `height * width`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let raw_data = vec![0, 1, 0, 1, 0, 0, 1, 1]; // Example raw data
+    /// let image = BinImage::new(2, 4, &raw_data);
+    /// ```
     pub fn new(height: u32, width: u32, data: &[u8]) -> Self {
         assert!(
             data.len() >= (height * width) as usize,
@@ -30,6 +49,15 @@ impl BinImage {
         }
     }
 
+    /// Gets the pixel value at the given coordinate.
+    ///
+    /// # Arguments
+    ///
+    /// * `p` - A `UVec2` representing the coordinates of the pixel.
+    ///
+    /// # Returns
+    ///
+    /// Returns `true` if the pixel is "on" (1), and `false` if it is "off" (0) or out of bounds.
     pub fn get(&self, p: UVec2) -> bool {
         let (x, y) = (p.x, p.y);
         let index = y * self.width + x;
@@ -45,6 +73,15 @@ impl BinImage {
         }
     }
 
+    /// Gets the values of the neighboring pixels (8-connectivity) around the given coordinate.
+    ///
+    /// # Arguments
+    ///
+    /// * `p` - A `UVec2` representing the coordinates of the center pixel.
+    ///
+    /// # Returns
+    ///
+    /// An array of 8 boolean values representing the state of the neighboring pixels.
     pub fn get_neighbors(&self, p: UVec2) -> [bool; 8] {
         let (x, y) = (p.x, p.y);
         [
@@ -59,7 +96,15 @@ impl BinImage {
         ]
     }
 
-    /// translate point in positive x,y to either side of (0,0)
+    /// Translates a point in positive (x, y) coordinates to a coordinate system centered at (0, 0).
+    ///
+    /// # Arguments
+    ///
+    /// * `p` - A `Vec2` representing the point to translate.
+    ///
+    /// # Returns
+    ///
+    /// A new `Vec2` representing the translated coordinates
     fn translate_point(&self, p: Vec2) -> Vec2 {
         Vec2::new(
             p.x - (self.width as f32 / 2.0 - 1.0),
@@ -67,6 +112,15 @@ impl BinImage {
         )
     }
 
+    /// Translates an iterator of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
+    ///
+    /// # Arguments
+    ///
+    /// * `v` - An iterator of `Vec2` points to translate.
+    ///
+    /// # Returns
+    ///
+    /// A vector of `Vec2` representing the translated coordinates.
     pub fn translate<T>(&self, v: T) -> Vec<Vec2>
     where
         T: Iterator<Item = Vec2>,
