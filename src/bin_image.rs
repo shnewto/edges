@@ -19,13 +19,6 @@ impl BinImage {
     /// # Panics
     ///
     /// This function will panic if the length of `data` is less than `height * width`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// let raw_data = vec![0, 1, 0, 1, 0, 0, 1, 1]; // Example raw data
-    /// let image = BinImage::new(2, 4, &raw_data);
-    /// ```
     pub fn new(height: u32, width: u32, data: &[u8]) -> Self {
         assert!(
             data.len() >= (height * width) as usize,
