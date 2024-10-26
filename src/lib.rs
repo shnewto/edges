@@ -82,11 +82,11 @@ impl Edges {
             .collect()
     }
 
-    /// Translates an iterator of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
+    /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
     ///
     /// # Arguments
     ///
-    /// * `v` - An iterator of `Vec2` points to translate.
+    /// * `v` - An `Vec` of `Vec2` points to translate.
     ///
     /// # Returns
     ///
