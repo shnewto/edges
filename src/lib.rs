@@ -4,9 +4,9 @@
 pub use bevy_math::prelude::{UVec2, Vec2};
 #[cfg(not(feature = "bevy"))]
 pub use glam::{UVec2, Vec2};
-use std::{collections::HashMap, fmt};
+use std::fmt;
 
-use crate::{bin_image::BinImage, utils::distance};
+use crate::{bin_image::BinImage, utils::points_to_drawing_order};
 
 mod bin_image;
 #[cfg(feature = "bevy")]
@@ -62,84 +62,38 @@ impl Edges {
         // Marching squares adjacent, walks all the pixels in the provided data and keeps track of
         // any that have at least one transparent / zero value neighbor then, while sorting into drawing
         // order, groups them into sets of connected pixels
-        let edge_points = (0..image.height * image.width)
-            .map(|i| (i / image.height, i % image.height))
+        let edge_points = (0..image.height() * image.width())
+            .map(|i| (i / image.height(), i % image.height()))
             .map(|(x, y)| UVec2::new(x, y))
             .filter(|p| image.get(*p))
             .filter(|p| (0..8).contains(&image.get_neighbors(*p).iter().filter(|i| **i).count()))
             .collect();
 
-        self.points_to_drawing_order(edge_points, translate)
+        points_to_drawing_order(edge_points)
+            .into_iter()
+            .map(|group| {
+                let group = group.into_iter().map(|p| p.as_vec2()).collect();
+                if translate {
+                    self.translate(group)
+                } else {
+                    group
+                }
+            })
+            .collect()
     }
 
-    /// Takes a collection of coordinates and attempts to sort them according to drawing order
+    /// Translates an iterator of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
     ///
-    /// Pixel sorted so that the distance to previous and next is 1. When there is no pixel left
-    /// with distance 1, another group is created and sorted the same way.
-    fn points_to_drawing_order(&self, points: Vec<UVec2>, translate: bool) -> Vec<Vec<Vec2>> {
-        if points.is_empty() {
-            return Vec::new();
-        }
-
-        let mut groups: Vec<Vec<UVec2>> = Vec::new();
-        let mut group: Vec<UVec2> = Vec::new();
-        let mut drawn_points_with_counts = HashMap::new();
-
-        let mut start = points[0];
-        let mut current = start;
-        group.push(current);
-        drawn_points_with_counts.insert(current, 2);
-
-        while drawn_points_with_counts.len() < points.len() {
-            if let Some(p) = points
-                .iter()
-                .filter(|p| (distance(current.as_vec2(), p.as_vec2()) - 1.0).abs() <= f32::EPSILON)
-                .min_by_key(|n| drawn_points_with_counts.get(n).map_or(0, |c| *c))
-            {
-                current = *p;
-                group.push(current);
-                if let Some(c) = drawn_points_with_counts.get_mut(p) {
-                    *c += 1;
-                } else {
-                    drawn_points_with_counts.insert(current, 2);
-                }
-            }
-
-            // we've traversed and backtracked and we're back at the start without reaching the end of the points
-            // so we need to start a collecting the points of a new unconnected object
-            if current == start {
-                // remove the connecting coordinate
-                let _ = group.pop();
-                groups.push(group.clone());
-                group.clear();
-                for val in drawn_points_with_counts.values_mut() {
-                    *val = 1;
-                }
-
-                if let Some(new_start) = points
-                    .iter()
-                    .find(|p| !drawn_points_with_counts.contains_key(p))
-                {
-                    start = *new_start;
-                    current = start;
-                    group.push(current);
-                    drawn_points_with_counts.insert(current, 2);
-                } else {
-                    break;
-                }
-            }
-        }
-        groups.push(group);
-
-        let groups = groups
-            .into_iter()
-            .map(|v| v.into_iter().map(|p| p.as_vec2()));
-
-        if translate {
-            groups.map(|p| self.image.translate(p)).collect()
-        } else {
-            groups.map(Iterator::collect).collect()
-        }
+    /// # Arguments
+    ///
+    /// * `v` - An iterator of `Vec2` points to translate.
+    ///
+    /// # Returns
+    ///
+    /// A vector of `Vec2` representing the translated coordinates.
+    #[must_use]
+    pub fn translate(&self, v: Vec<Vec2>) -> Vec<Vec2> {
+        self.image.translate(v)
     }
 }
 
@@ -173,12 +127,13 @@ impl fmt::Debug for Edges {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "EdgesDisplay {{
-    raw: {:#?},
-    translated: {:#?}
-}}",
-            self.image_edges(false),
-            self.image_edges(true),
+            "{}",
+            format!(
+                "Edges {{\nraw: {:#?},\ntranslated: {:#?}\n}}",
+                self.image_edges(false),
+                self.image_edges(true),
+            )
+            .replace('\n', "\n    "),
         )
     }
 }

@@ -2,8 +2,8 @@ use crate::{UVec2, Vec2};
 
 pub struct BinImage {
     data: Vec<u8>,
-    pub height: u32,
-    pub width: u32,
+    height: u32,
+    width: u32,
 }
 
 impl BinImage {
@@ -114,10 +114,15 @@ impl BinImage {
     /// # Returns
     ///
     /// A vector of `Vec2` representing the translated coordinates.
-    pub fn translate<T>(&self, v: T) -> Vec<Vec2>
-    where
-        T: Iterator<Item = Vec2>,
-    {
-        v.map(|p| self.translate_point(p)).collect()
+    pub fn translate(&self, v: Vec<Vec2>) -> Vec<Vec2> {
+        v.into_iter().map(|p| self.translate_point(p)).collect()
+    }
+
+    pub const fn height(&self) -> u32 {
+        self.height
+    }
+
+    pub const fn width(&self) -> u32 {
+        self.width
     }
 }
