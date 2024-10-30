@@ -15,8 +15,6 @@ repository = "https://github.com/shnewto/edges"
 license = "MIT OR Apache-2.0"
 
 [lints.clippy]
-type_complexity = { level = "allow", priority = 1 }
-needless_pass_by_value = { level = "allow", priority = 1 }
 cast_precision_loss = { level = "allow", priority = 1 }
 pedantic = { level = "warn", priority = 0 }
 

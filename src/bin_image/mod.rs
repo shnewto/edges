@@ -1,4 +1,5 @@
 use crate::{UVec2, Vec2};
+pub mod neighbors;
 
 pub struct BinImage {
     data: Vec<u8>,
@@ -74,19 +75,35 @@ impl BinImage {
     ///
     /// # Returns
     ///
-    /// An array of 8 boolean values representing the state of the neighboring pixels.
-    pub fn get_neighbors(&self, p: UVec2) -> [bool; 8] {
+    /// An byte representing the state of the neighboring pixels.
+    pub fn get_neighbors(&self, p: UVec2) -> u8 {
         let (x, y) = (p.x, p.y);
-        [
-            y < u32::MAX && self.get((x, y + 1).into()), // North
-            y > u32::MIN && self.get((x, y - 1).into()), // South
-            x < u32::MAX && self.get((x + 1, y).into()), // East
-            x > u32::MIN && self.get((x - 1, y).into()), // West
-            x < u32::MAX && y < u32::MAX && self.get((x + 1, y + 1).into()), // Northeast
-            x > u32::MIN && y > u32::MIN && self.get((x - 1, y - 1).into()), // Southwest
-            x < u32::MAX && y > u32::MIN && self.get((x + 1, y - 1).into()), // Southeast
-            x > u32::MIN && y < u32::MAX && self.get((x - 1, y + 1).into()), // Northwest
-        ]
+        let mut neighbors = 0;
+        if y < u32::MAX && self.get(UVec2::new(x, y + 1)) {
+            neighbors |= neighbors::NORTH;
+        }
+        if y > u32::MIN && self.get(UVec2::new(x, y - 1)) {
+            neighbors |= neighbors::SOUTH;
+        }
+        if x < u32::MAX && self.get(UVec2::new(x + 1, y)) {
+            neighbors |= neighbors::EAST;
+        }
+        if x > u32::MIN && self.get(UVec2::new(x - 1, y)) {
+            neighbors |= neighbors::WEST;
+        }
+        if x < u32::MAX && y < u32::MAX && self.get(UVec2::new(x + 1, y + 1)) {
+            neighbors |= neighbors::NORTHEAST;
+        }
+        if x > u32::MIN && y > u32::MIN && self.get(UVec2::new(x - 1, y - 1)) {
+            neighbors |= neighbors::NORTHWEST;
+        }
+        if x < u32::MAX && y > u32::MIN && self.get(UVec2::new(x + 1, y - 1)) {
+            neighbors |= neighbors::SOUTHEAST;
+        }
+        if x > u32::MIN && y < u32::MAX && self.get(UVec2::new(x - 1, y + 1)) {
+            neighbors |= neighbors::SOUTHWEST;
+        }
+        neighbors
     }
 
     /// Translates a point in positive (x, y) coordinates to a coordinate system centered at (0, 0).
@@ -100,8 +117,8 @@ impl BinImage {
     /// A new `Vec2` representing the translated coordinates
     fn translate_point(&self, p: Vec2) -> Vec2 {
         Vec2::new(
-            p.x - (self.width as f32 / 2.0 - 1.0),
-            (self.height as f32 / 2.0 - 1.0) - p.y,
+            p.x - ((self.width / 2) as f32 - 1.0),
+            ((self.height / 2) as f32 - 1.0) - p.y,
         )
     }
 

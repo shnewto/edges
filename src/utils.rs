@@ -1,69 +1,199 @@
-use crate::{UVec2, Vec2};
-use std::collections::HashMap;
+use crate::UVec2;
+use std::cmp::Ordering::{Equal, Greater, Less};
+use std::ops::{AddAssign, SubAssign};
 
-// d=√((x2-x1)²+(y2-y1)²)
-pub fn distance(a: Vec2, b: Vec2) -> f32 {
-    ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
+pub fn is_corner(neighbors: u8) -> bool {
+    !matches!(
+        neighbors,
+        213 | 234
+            | 200
+            | 196
+            | 194
+            | 193
+            | 192
+            | 185
+            | 118
+            | 56
+            | 52
+            | 50
+            | 49
+            | 48
+            | 177
+            | 170
+            | 184
+            | 212
+            | 209
+            | 114
+            | 116
+            | 232
+            | 226
+            | 251
+            | 255
+            | 0
+    )
 }
 
-/// Takes a collection of coordinates and attempts to sort them according to drawing order
-///
-/// Pixel sorted so that the distance to previous and next is 1. When there is no pixel left
-/// with distance 1, another group is created and sorted the same way.
-pub fn points_to_drawing_order(points: Vec<UVec2>) -> Vec<Vec<UVec2>> {
-    if points.is_empty() {
-        return Vec::new();
-    }
-
-    let mut groups: Vec<Vec<UVec2>> = Vec::new();
-    let mut group: Vec<UVec2> = Vec::new();
-    let mut drawn_points_with_counts = HashMap::new();
-
-    let mut start = points[0];
-    let mut current = start;
-    group.push(current);
-    drawn_points_with_counts.insert(current, 2);
-
-    while drawn_points_with_counts.len() < points.len() {
-        if let Some(p) = points
-            .iter()
-            .filter(|p| (distance(current.as_vec2(), p.as_vec2()) - 1.0).abs() <= f32::EPSILON)
-            .min_by_key(|n| drawn_points_with_counts.get(n).map_or(0, |c| *c))
-        {
-            current = *p;
-            group.push(current);
-            if let Some(c) = drawn_points_with_counts.get_mut(p) {
-                *c += 1;
-            } else {
-                drawn_points_with_counts.insert(current, 2);
-            }
+#[allow(clippy::too_many_lines)]
+pub fn match_neighbors(neighbors: u8, current: &mut UVec2, group: &mut Vec<UVec2>) {
+    if let Some(last) = group.last() {
+        let last = *last;
+        if last != *current && is_corner(neighbors) {
+            group.push(*current);
         }
-
-        // we've traversed and backtracked and we're back at the start without reaching the end of the points
-        // so we need to start a collecting the points of a new unconnected object
-        if current == start {
-            // remove the connecting coordinate
-            let _ = group.pop();
-            groups.push(group.clone());
-            group.clear();
-            for val in drawn_points_with_counts.values_mut() {
-                *val = 1;
+        println!("l:{last}");
+        println!("c:{current}");
+        println!("n:{neighbors}");
+        // println!("{group:#?}");
+        if current.x == 511 {
+            todo!();
+        }
+        match neighbors {
+            189 | 191 | 119 | 126 | 187 | 185 | 118 | 56 | 52 | 50 | 49 | 48 => {
+                match last.x.cmp(&current.x) {
+                    Greater | Equal => current.x.sub_assign(1),
+                    Less => current.x.add_assign(1),
+                }
             }
-
-            if let Some(new_start) = points
-                .iter()
-                .find(|p| !drawn_points_with_counts.contains_key(p))
-            {
-                start = *new_start;
-                current = start;
-                group.push(current);
-                drawn_points_with_counts.insert(current, 2);
-            } else {
-                break;
+            221 | 215 | 238 | 235 | 213 | 234 | 200 | 196 | 194 | 193 | 192 => {
+                match last.y.cmp(&current.y) {
+                    Greater | Equal => current.y.sub_assign(1),
+                    Less => current.y.add_assign(1),
+                }
             }
+            168 | 160 => match last.x.cmp(&current.x) {
+                Greater => current.y.add_assign(1),
+                Equal => current.x.add_assign(1),
+                Less => unreachable!(),
+            },
+            145 | 144 => match last.x.cmp(&current.x) {
+                Greater => unreachable!(),
+                Equal => current.x.sub_assign(1),
+                Less => current.y.add_assign(1),
+            },
+            84 | 80 => match last.x.cmp(&current.x) {
+                Greater => unreachable!(),
+                Equal => current.x.sub_assign(1),
+                Less => current.y.sub_assign(1),
+            },
+            98 | 96 => match last.x.cmp(&current.x) {
+                Greater => current.y.sub_assign(1),
+                Equal => current.x.add_assign(1),
+                Less => unreachable!(),
+            },
+            177 => match last.x.cmp(&current.x) {
+                Greater => {
+                    group.push(*current);
+                    current.y += 1;
+                }
+                Equal => unreachable!(),
+                Less => current.x.add_assign(1),
+            },
+            184 => match last.x.cmp(&current.x) {
+                Greater => unreachable!(),
+                Equal => {
+                    group.push(*current);
+                    current.x -= 1;
+                }
+                Less => current.x.add_assign(1),
+            },
+            212 => match last.y.cmp(&current.y) {
+                Greater => {
+                    group.push(*current);
+                    current.x -= 1;
+                }
+                Equal => unreachable!(),
+                Less => current.y.add_assign(1),
+            },
+            209 => match last.y.cmp(&current.y) {
+                Greater => unreachable!(),
+                Equal => {
+                    group.push(*current);
+                    current.y -= 1;
+                }
+                Less => current.y.add_assign(1),
+            },
+            114 => match last.x.cmp(&current.x) {
+                Greater => current.x.sub_assign(1),
+                Equal => unreachable!(),
+                Less => {
+                    group.push(*current);
+                    current.y -= 1;
+                }
+            },
+            116 => match last.x.cmp(&current.x) {
+                Greater => current.x.sub_assign(1),
+                Equal => {
+                    group.push(*current);
+                    current.x += 1;
+                }
+                Less => unreachable!(),
+            },
+            232 => match last.y.cmp(&current.y) {
+                Greater => current.y.sub_assign(1),
+                Equal => unreachable!(),
+                Less => {
+                    group.push(*current);
+                    current.x += 1;
+                }
+            },
+            226 => match last.y.cmp(&current.y) {
+                Greater => current.y.sub_assign(1),
+                Equal => {
+                    group.push(*current);
+                    current.y -= 1;
+                }
+                Less => unreachable!(),
+            },
+            169..=171 | 253 => match last.x.cmp(&current.x) {
+                Greater | Less => unreachable!(),
+                Equal => {
+                    group.push(*current);
+                    current.x += 1;
+                }
+            },
+            153 | 157 | 149 => match last.x.cmp(&current.x) {
+                Greater | Equal => unreachable!(),
+                Less => {
+                    group.push(*current);
+                    current.y += 1;
+                }
+            },
+            85..=87 | 254 => match last.x.cmp(&current.x) {
+                Greater | Less => unreachable!(),
+                Equal => {
+                    group.push(*current);
+                    current.x -= 1;
+                }
+            },
+            251 => match last.x.cmp(&current.x) {
+                Greater | Equal => unreachable!(),
+                Less => {
+                    group.push(*current);
+                    current.y -= 1;
+                }
+            },
+            247 => match last.x.cmp(&current.x) {
+                Greater => {
+                    group.push(*current);
+                    current.y += 1;
+                }
+                Equal | Less => unreachable!(),
+            },
+            110 | 102 => match last.x.cmp(&current.x) {
+                Greater => {
+                    group.push(*current);
+                    current.y -= 1;
+                }
+                Equal | Less => unreachable!(),
+            },
+            106 => match last.x.cmp(&current.x) {
+                Greater | Equal => {
+                    group.push(*current);
+                    current.y -= 1;
+                }
+                Less => unreachable!(),
+            },
+            _ => {}
         }
     }
-    groups.push(group);
-
-    groups
 }
