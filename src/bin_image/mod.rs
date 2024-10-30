@@ -61,7 +61,7 @@ impl BinImage {
             .copied()
         {
             byte >>= index % 8; // index of bit
-            x <= self.width && byte & 1 > 0
+            x < self.width && byte & 1 > 0
         } else {
             false
         }
