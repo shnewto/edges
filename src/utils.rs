@@ -5,13 +5,22 @@ use std::ops::{AddAssign, SubAssign};
 pub fn is_corner(neighbors: u8) -> bool {
     !matches!(
         neighbors,
-        213 | 234
+        238 | 235
+            | 234
+            | 221
+            | 215
+            | 213
             | 200
             | 196
             | 194
             | 193
             | 192
+            | 191
+            | 189
+            | 187
             | 185
+            | 126
+            | 119
             | 118
             | 56
             | 52
@@ -44,17 +53,14 @@ pub fn match_neighbors(neighbors: u8, current: &mut UVec2, group: &mut Vec<UVec2
         println!("c:{current}");
         println!("n:{neighbors}");
         // println!("{group:#?}");
-        if current.x == 511 {
-            todo!();
-        }
         match neighbors {
-            189 | 191 | 119 | 126 | 187 | 185 | 118 | 56 | 52 | 50 | 49 | 48 => {
+            191 | 189 | 187 | 185 | 126 | 119 | 118 | 56 | 52 | 48..=50 => {
                 match last.x.cmp(&current.x) {
                     Greater | Equal => current.x.sub_assign(1),
                     Less => current.x.add_assign(1),
                 }
             }
-            221 | 215 | 238 | 235 | 213 | 234 | 200 | 196 | 194 | 193 | 192 => {
+            238 | 235 | 234 | 221 | 215 | 213 | 200 | 196 | 192..=194 => {
                 match last.y.cmp(&current.y) {
                     Greater | Equal => current.y.sub_assign(1),
                     Less => current.y.add_assign(1),
@@ -80,6 +86,27 @@ pub fn match_neighbors(neighbors: u8, current: &mut UVec2, group: &mut Vec<UVec2
                 Equal => current.x.add_assign(1),
                 Less => unreachable!(),
             },
+            169..=171 | 253 => match last.x.cmp(&current.x) {
+                Greater | Less => unreachable!(),
+                Equal => {
+                    group.push(*current);
+                    current.x += 1;
+                }
+            },
+            85..=87 | 254 => match last.x.cmp(&current.x) {
+                Greater | Less => unreachable!(),
+                Equal => {
+                    group.push(*current);
+                    current.x -= 1;
+                }
+            },
+            153 | 157 | 149 => match last.x.cmp(&current.x) {
+                Greater | Equal => unreachable!(),
+                Less => {
+                    group.push(*current);
+                    current.y += 1;
+                }
+            },
             177 => match last.x.cmp(&current.x) {
                 Greater => {
                     group.push(*current);
@@ -99,7 +126,7 @@ pub fn match_neighbors(neighbors: u8, current: &mut UVec2, group: &mut Vec<UVec2
             212 => match last.y.cmp(&current.y) {
                 Greater => {
                     group.push(*current);
-                    current.x -= 1;
+                    current.x -= 1; 
                 }
                 Equal => unreachable!(),
                 Less => current.y.add_assign(1),
@@ -143,27 +170,6 @@ pub fn match_neighbors(neighbors: u8, current: &mut UVec2, group: &mut Vec<UVec2
                     current.y -= 1;
                 }
                 Less => unreachable!(),
-            },
-            169..=171 | 253 => match last.x.cmp(&current.x) {
-                Greater | Less => unreachable!(),
-                Equal => {
-                    group.push(*current);
-                    current.x += 1;
-                }
-            },
-            153 | 157 | 149 => match last.x.cmp(&current.x) {
-                Greater | Equal => unreachable!(),
-                Less => {
-                    group.push(*current);
-                    current.y += 1;
-                }
-            },
-            85..=87 | 254 => match last.x.cmp(&current.x) {
-                Greater | Less => unreachable!(),
-                Equal => {
-                    group.push(*current);
-                    current.x -= 1;
-                }
             },
             251 => match last.x.cmp(&current.x) {
                 Greater | Equal => unreachable!(),
