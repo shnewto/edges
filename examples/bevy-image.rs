@@ -48,9 +48,9 @@ fn draw_png(image: Image, img_path: &str) {
     // draw the edges to a png
     let mut dt = DrawTarget::new(width, height);
 
-    let objects_iter = edges.multi_image_edges_raw().into_iter();
+    let objects = edges.multi_image_edges_raw();
 
-    for object in objects_iter {
+    for object in objects {
         let mut pb = PathBuilder::new();
         let mut edges_iter = object.into_iter();
 

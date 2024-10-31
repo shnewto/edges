@@ -6,7 +6,7 @@ pub use bevy_math::prelude::{UVec2, Vec2};
 #[cfg(not(feature = "bevy"))]
 pub use glam::{UVec2, Vec2};
 use std::fmt;
-use utils::{is_corner, match_neighbors};
+use utils::is_corner;
 
 mod bin_image;
 #[cfg(feature = "bevy")]
@@ -62,64 +62,42 @@ impl Edges {
         // Marching squares adjacent, walks all the pixels in the provided data and keeps track of
         // any that have at least one transparent / zero value neighbor then, while sorting into drawing
         // order, groups them into sets of connected pixels
-        let edge_points: Vec<_> = (0..image.height() * image.width())
+        let corners: Vec<_> = (0..image.height() * image.width())
             .map(|i| UVec2::new(i / image.height(), i % image.height()))
             .filter(|p| image.get(*p) && is_corner(image.get_neighbors(*p)))
             .collect();
 
-        let groups: Vec<_> = self
-            .points_to_drawing_order(&edge_points)
+        let objects: Vec<_> = self
+            .collect_objects(&corners)
             .into_iter()
-            .map(|group| group.into_iter().map(|p| p.as_vec2()).collect())
+            .map(|object| object.into_iter().map(|p| p.as_vec2()).collect())
             .collect();
         if translate {
-            groups
+            objects
                 .into_iter()
                 .map(|group| self.translate(group))
                 .collect()
         } else {
-            groups
+            objects
         }
     }
 
-    /// Takes a collection of coordinates and attempts to sort them according to drawing order
-    ///
-    /// Pixel sorted so that the distance to previous and next is 1. When there is no pixel left
-    /// with distance 1, another group is created and sorted the same way.
-    fn points_to_drawing_order(&self, points: &[UVec2]) -> Vec<Vec<UVec2>> {
-        if points.is_empty() {
+    fn collect_objects(&self, corners: &[UVec2]) -> Vec<Vec<UVec2>> {
+        if corners.is_empty() {
             return Vec::new();
         }
 
-        let mut groups: Vec<Vec<_>> = Vec::new();
-        let mut group: Vec<_> = Vec::new();
-        let mut start = points[0];
-        let mut current = start;
-        group.push(current);
+        let mut objects: Vec<Vec<UVec2>> = Vec::new();
 
-        loop {
-            match_neighbors(self.image.get_neighbors(current), &mut current, &mut group);
-
-            // we've traversed and backtracked and we're back at the start without reaching the end of the points
-            // so we need to start a collecting the points of a new unconnected object
-            if current == start {
-                groups.push(group.clone());
-                group.clear();
-
-                if let Some(new_start) = points
-                    .iter()
-                    .find(|p1| groups.iter().flatten().all(|p2| *p1 != p2))
-                {
-                    start = *new_start;
-                    current = start;
-                    group.push(current);
-                } else {
-                    break;
-                }
-            }
+        while let Some(start) = corners
+            .iter()
+            .find(|point| objects.iter().all(|object| !object.contains(point)))
+        {
+            let object = self.collect_object(*start);
+            objects.push(object);
         }
 
-        groups
+        objects
     }
 
     /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
