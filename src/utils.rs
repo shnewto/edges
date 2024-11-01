@@ -69,23 +69,19 @@ pub fn is_corner(neighbors: u8) -> bool {
             | 114
             | 58
             | 56
-            | 52..=54
-            | 48..=50
+            | 48..=54
             | 0
     )
 }
 
 #[allow(clippy::too_many_lines)]
 pub fn handle_neighbors(current: &mut UVec2, last: UVec2, neighbors: u8) -> Option<UVec2> {
-    println!("l:{last}");
-    println!("c:{current}");
-    println!("n:{neighbors}");
     match neighbors {
         253 | 169..=171 | 40 | 38 | 32 => current.x += 1,
         254 | 85..=87 | 16 => current.x -= 1,
         251 | 110 | 106 | 102 | 64 => current.y -= 1,
         247 | 153 | 157 | 149 | 129 | 128 => current.y += 1,
-        233 | 191 | 189 | 187 | 185 | 127 | 126 | 119 | 118 | 58 | 56 | 52..=54 | 48..=50 => {
+        233 | 191 | 189 | 187 | 185 | 127 | 126 | 119 | 118 | 58 | 56 | 48..=54 => {
             match last.x.cmp(&current.x) {
                 Greater | Equal => current.x -= 1,
                 Less => current.x += 1,
@@ -107,7 +103,7 @@ pub fn handle_neighbors(current: &mut UVec2, last: UVec2, neighbors: u8) -> Opti
             Equal => current.x -= 1,
             Less => current.y += 1,
         },
-        90 | 84 | 80 => match last.x.cmp(&current.x) {
+        90 | 84 | 82 | 80 => match last.x.cmp(&current.x) {
             Greater => unreachable!(),
             Equal => current.x -= 1,
             Less => current.y -= 1,
@@ -309,9 +305,30 @@ pub fn handle_neighbors(current: &mut UVec2, last: UVec2, neighbors: u8) -> Opti
             }
             _ => unreachable!(),
         },
+        36 => match last.x.cmp(&current.x) {
+            Greater => {
+                current.x -= 1;
+                current.y -= 1;
+            }
+            Equal => unreachable!(),
+            Less => current.x += 1,
+        },
+        74 => match last.x.cmp(&current.x) {
+            Greater => current.y -= 1,
+            Equal => {
+                current.x += 1;
+                current.y += 1;
+            }
+            Less => unreachable!(),
+        }
+        250 => match last.y.cmp(&current.y) {
+            Greater => current.x -= 1,
+            Equal => current.y -= 1,
+            Less => current.y += 1,
+        }
         0 | 255 => unreachable!(),
         _ => {
-            unreachable!()
+            todo!("\nadd handle for this case:\nlast point:{last}\ncurrent point:{current}\ncurrent neighbors:{neighbors}")
         }
     }
     None
