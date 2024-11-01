@@ -6,7 +6,7 @@ pub use bevy_math::prelude::{UVec2, Vec2};
 #[cfg(not(feature = "bevy"))]
 pub use glam::{UVec2, Vec2};
 use std::fmt;
-use utils::is_corner;
+use utils::{handle_neighbors, in_polygon, is_corner};
 
 mod bin_image;
 #[cfg(feature = "bevy")]
@@ -89,15 +89,33 @@ impl Edges {
 
         let mut objects: Vec<Vec<UVec2>> = Vec::new();
 
-        while let Some(start) = corners
-            .iter()
-            .find(|point| objects.iter().all(|object| !object.contains(point)))
-        {
+        while let Some(start) = corners.iter().find(|point| {
+            objects
+                .iter()
+                .all(|object| !object.contains(point) && !in_polygon(**point, object))
+        }) {
             let object = self.collect_object(*start);
             objects.push(object);
         }
 
         objects
+    }
+
+    fn collect_object(&self, mut current: UVec2) -> Vec<UVec2> {
+        let mut group: Vec<UVec2> = Vec::new();
+        group.push(current);
+        loop {
+            let (last, neighbors) = (*group.last().unwrap(), self.image.get_neighbors(current));
+            if last != current && is_corner(neighbors) {
+                group.push(current);
+            }
+            if let Some(point) = handle_neighbors(&mut current, last, neighbors) {
+                group.push(point);
+            }
+            if current == group[0] {
+                break group;
+            }
+        }
     }
 
     /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
