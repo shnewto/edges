@@ -19,12 +19,13 @@ cast_precision_loss = { level = "allow", priority = 1 }
 pedantic = { level = "warn", priority = 0 }
 
 [features]
-default = ["glam-latest"]
+default = ["bevy"]
 glam-latest = ["dep:glam"]
 bevy = ["dep:bevy_math", "dep:bevy_render"]
 
 [dependencies]
 image = "0.25"
+rayon = "1.10.0"
 
 [dependencies.glam]
 version = "0.29"
