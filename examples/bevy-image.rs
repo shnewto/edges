@@ -32,8 +32,19 @@ fn main() {
     )
     .unwrap();
 
+    let diagonals = Image::from_buffer(
+        include_bytes!("../assets/diagonals.png"),
+        ImageType::Extension("png"),
+        CompressedImageFormats::default(),
+        true,
+        ImageSampler::default(),
+        RenderAssetUsages::default(),
+    )
+    .unwrap();
+
     draw_png(boulders, "boulders");
     draw_png(more_lines, "more-lines");
+    draw_png(diagonals, "diagonals");
 }
 
 fn draw_png(image: Image, img_path: &str) {
