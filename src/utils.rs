@@ -1,37 +1,35 @@
 use crate::UVec2;
 use std::cmp::Ordering::{Equal, Greater, Less};
 
+// Get the bounding box of the polygon
+fn bounding_box(polygon: &[UVec2]) -> Option<(UVec2, UVec2)> {
+    polygon
+        .iter()
+        .copied()
+        .zip(polygon.iter().copied())
+        .reduce(|(min, max), (a, b)| (min.min(a), max.max(b)))
+}
+
 pub fn in_polygon(point: UVec2, polygon: &[UVec2]) -> bool {
-    let mut is_inside = false;
-    for win in polygon.windows(2) {
-        let (p1, p2) = (win[0], win[1]);
-        if (p1.x.min(p2.x) <= point.x && point.x <= p1.x.max(p2.x))
-            && (p1.y.min(p2.y) <= point.y && point.y <= p1.y.max(p2.y))
-            && (p1.y.max(p2.y) - p1.y.min(p2.y)) * (point.x - p1.x.min(p2.x))
-                == (p2.x.max(p2.x) - p1.x.min(p2.x)) * (point.y - p1.y.min(p2.y))
-        {
-            return true;
+    if let Some((min, max)) = bounding_box(polygon) {
+        // Check if the point is within the bounding box
+        if point.x < min.x || point.x > max.x || point.y < min.y || point.y > max.y {
+            return false; // Early exit if outside the bounding box
         }
+    }
 
-        if p1.y <= point.y && point.y < p2.y || p2.y <= point.y && point.y < p1.y {
-            let (point_x, offset_x) = point
-                .x
-                .checked_sub(p1.x)
-                .map_or_else(|| (0, p1.x - point.x), |dx| (dx, 0));
-            let (point_y, offset_y) = point
-                .y
-                .checked_sub(p1.y)
-                .map_or_else(|| (0, p1.y - point.y), |dy| (dy, 0));
+    let mut is_inside = false;
 
-            let (dx, offset_x) = (p2.x + offset_x)
-                .checked_sub(p1.x)
-                .map_or_else(|| (0, p1.x - p2.x - offset_x), |dx| (dx, 0));
-            let (dy, offset_y) = (p2.y + offset_y)
-                .checked_sub(p1.y)
-                .map_or_else(|| (0, p1.y - p2.y - offset_y), |dy| (dy, 0));
-            if (point_x + offset_x) * dy >= dx * (point_y + offset_y) {
-                is_inside = !is_inside;
+    for i in 0..polygon.len() {
+        let (p1, p2) = (polygon[i], polygon[(i + 1) % polygon.len()]);
+        let (min, max) = (p1.min(p2), p1.max(p2));
+        let (dy, dx) = (max.y - min.y, max.x - min.x);
+
+        if min.y <= point.y && point.y < max.y && point.x <= min.x + dx * (point.y - min.y) / dy {
+            if min.x <= point.x && point.x < max.x {
+                return true;
             }
+            is_inside = !is_inside;
         }
     }
     is_inside
@@ -43,293 +41,275 @@ pub fn is_corner(neighbors: u8) -> bool {
         255
             | 239
             | 238
-            | 232..=235
-            | 127
-            | 226
+            | 235
+            | 234
             | 223
             | 221
             | 215
             | 213
-            | 212
-            | 209
-            | 207
-            | 201
-            | 200
-            | 196..=198
-            | 191..=194
-            | 189
-            | 187
-            | 185
-            | 184
-            | 177
-            | 126
+            | 188..=207
+            | 127
+            | 123
             | 119
-            | 118
-            | 116
-            | 114
-            | 58
-            | 56
-            | 48..=54
+            | 115
+            | 48..=63
+            | 9
+            | 6
             | 0
     )
 }
 
+pub enum Direction {
+    North,
+    South,
+    East,
+    West,
+
+    Northeast,
+    Northwest,
+    Southeast,
+    Southwest,
+}
+
 #[allow(clippy::too_many_lines)]
-pub fn handle_neighbors(current: &mut UVec2, last: UVec2, neighbors: u8) -> Option<UVec2> {
+pub fn handle_neighbors(current: UVec2, last: UVec2, neighbors: u8) -> Direction {
+    use Direction::{East, North, Northeast, Northwest, South, Southeast, Southwest, West};
     match neighbors {
-        253 | 169..=171 | 40 | 38 | 32 => current.x += 1,
-        254 | 85..=87 | 16 => current.x -= 1,
-        251 | 110 | 106 | 102 | 64 => current.y -= 1,
-        247 | 153 | 157 | 149 | 129 | 128 => current.y += 1,
-        233 | 191 | 189 | 187 | 185 | 127 | 126 | 119 | 118 | 58 | 56 | 48..=54 => {
-            match last.x.cmp(&current.x) {
-                Greater | Equal => current.x -= 1,
-                Less => current.x += 1,
+        0 | 255 => unreachable!(),
+        188..=191 | 127 | 123 | 119 | 115 | 48..=63 => match last.x.cmp(&current.x) {
+            Greater => West,
+            Equal => unreachable!(),
+            Less => East,
+        },
+        239 | 238 | 235 | 234 | 223 | 221 | 215 | 213 | 192..=207 => match last.y.cmp(&current.y) {
+            Greater => South,
+            Equal => unreachable!(),
+            Less => North,
+        },
+        6 => match last.x.cmp(&current.x) {
+            Greater => Northwest,
+            Equal => unreachable!(),
+            Less => Southeast,
+        },
+        9 => match last.x.cmp(&current.x) {
+            Greater => Southwest,
+            Equal => unreachable!(),
+            Less => Northeast,
+        },
+
+        140 | 136 | 132 | 128 => North,
+        99 | 98 | 64..=67 => South,
+        42 | 40 | 34 | 32 => East,
+        21 | 20 | 17 | 16 => West,
+        8 => Northeast,
+        4 => Northwest,
+        2 => Southeast,
+        1 => Southwest,
+        247 | 245 | 174 | 172 | 170 | 168 | 166 | 164 | 162 | 160 => match last.x.cmp(&current.x) {
+            Greater => North,
+            Equal => East,
+            Less => unreachable!(),
+        },
+        253 | 104..=107 | 97 | 96 => match last.x.cmp(&current.x) {
+            Greater => South,
+            Equal => East,
+            Less => unreachable!(),
+        },
+        251 | 157 | 156 | 153 | 152 | 149 | 148 | 145 | 144 => match last.x.cmp(&current.x) {
+            Greater => unreachable!(),
+            Equal => West,
+            Less => North,
+        },
+        254 | 250 | 80..=87 => match last.x.cmp(&current.x) {
+            Greater => unreachable!(),
+            Equal => West,
+            Less => South,
+        },
+        180..=182 => match last.x.cmp(&current.x) {
+            Greater => North,
+            Equal => unreachable!(),
+            Less => East,
+        },
+        186 | 184 => match last.x.cmp(&current.x) {
+            Greater => unreachable!(),
+            Equal => West,
+            Less => East,
+        },
+        231 | 226 => match last.x.cmp(&current.x) {
+            Greater => North,
+            Equal => South,
+            Less => unreachable!(),
+        },
+        236 | 232 => match last.y.cmp(&current.y) {
+            Greater => South,
+            Equal => unreachable!(),
+            Less => East,
+        },
+        249 | 248 | 246 | 244 | 240..=242 => {
+            match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+                (Less, Equal) => South,
+                (Equal, Less) => East,
+                (Greater, Equal) => North,
+                (Equal, Greater) => West,
+                _ => unreachable!(),
             }
         }
-        239 | 238 | 235 | 234 | 223 | 221 | 215 | 213 | 207 | 201 | 200 | 196..=198 | 192..=194 => {
-            match last.y.cmp(&current.y) {
-                Greater | Equal => current.y -= 1,
-                Less => current.y += 1,
-            }
-        }
-        168 | 162 | 160 => match last.x.cmp(&current.x) {
-            Greater => current.y += 1,
-            Equal => current.x += 1,
-            Less => unreachable!(),
-        },
-        145 | 144 => match last.x.cmp(&current.x) {
-            Greater => unreachable!(),
-            Equal => current.x -= 1,
-            Less => current.y += 1,
-        },
-        90 | 84 | 82 | 80 => match last.x.cmp(&current.x) {
-            Greater => unreachable!(),
-            Equal => current.x -= 1,
-            Less => current.y -= 1,
-        },
-        98 | 96 => match last.x.cmp(&current.x) {
-            Greater => current.y -= 1,
-            Equal => current.x += 1,
-            Less => unreachable!(),
-        },
-        177 => match last.x.cmp(&current.x) {
-            Greater => {
-                current.y += 1;
-                return Some(current.with_y(current.y - 1));
-            }
+
+        110 | 103 | 102 => match last.x.cmp(&current.x) {
+            Greater => Northwest,
             Equal => unreachable!(),
-            Less => current.x += 1,
+            Less => South,
         },
-        184 => match last.x.cmp(&current.x) {
-            Greater => unreachable!(),
-            Equal => {
-                current.x -= 1;
-                return Some(current.with_x(current.x + 1));
-            }
-            Less => current.x += 1,
+        111 | 109 | 108 | 101 | 100 => match last.x.cmp(&current.x) {
+            Greater => Northwest,
+            Equal => East,
+            Less => South,
         },
-        212 => match last.y.cmp(&current.y) {
-            Greater => {
-                current.x -= 1;
-                return Some(current.with_x(current.x + 1));
-            }
+        46 | 44 | 38 | 36 => match last.x.cmp(&current.x) {
+            Greater => Northwest,
             Equal => unreachable!(),
-            Less => current.y += 1,
+            Less => East,
         },
-        209 => match last.y.cmp(&current.y) {
-            Greater => unreachable!(),
-            Equal => {
-                current.y -= 1;
-                return Some(current.with_y(current.y + 1));
-            }
-            Less => current.y += 1,
-        },
-        114 => match last.x.cmp(&current.x) {
-            Greater => current.x -= 1,
+        43 | 41 | 35 | 33 => match last.x.cmp(&current.x) {
+            Greater => Southwest,
             Equal => unreachable!(),
-            Less => {
-                current.y -= 1;
-                return Some(current.with_y(current.y + 1));
-            }
+            Less => East,
         },
-        116 => match last.x.cmp(&current.x) {
-            Greater => current.x -= 1,
-            Equal => {
-                current.x += 1;
-                return Some(current.with_x(current.x - 1));
-            }
+        175 | 173 | 171 | 169 | 167 | 165 | 163 | 161 => match last.x.cmp(&current.x) {
+            Greater => North,
+            Equal => Southwest,
+            Less => East,
+        },
+        142 | 138 | 134 | 130 => match last.x.cmp(&current.x) {
+            Greater => North,
+            Equal => Southeast,
             Less => unreachable!(),
         },
-        232 => match last.y.cmp(&current.y) {
-            Greater => current.y -= 1,
+        95 | 93 | 91 | 89 => match last.x.cmp(&current.x) {
+            Greater => West,
+            Equal => Northeast,
+            Less => unreachable!(),
+        },
+        141 | 137 | 133 | 129 => match last.x.cmp(&current.x) {
+            Greater => unreachable!(),
+            Equal => Southwest,
+            Less => North,
+        },
+        94 | 92 | 90 | 88 => match last.x.cmp(&current.x) {
+            Greater => West,
+            Equal => Northeast,
+            Less => South,
+        },
+        23 | 22 | 19 | 18 => match last.x.cmp(&current.x) {
+            Greater => West,
             Equal => unreachable!(),
-            Less => {
-                current.x += 1;
-                return Some(current.with_x(current.x - 1));
-            }
+            Less => Southeast,
         },
-        226 => match last.y.cmp(&current.y) {
-            Greater => current.y -= 1,
-            Equal => {
-                current.y -= 1;
-                return Some(current.with_y(current.y + 1));
-            }
+        159 | 158 | 155 | 154 | 151 | 150 | 147 | 146 => match last.x.cmp(&current.x) {
+            Greater => North,
+            Equal => West,
+            Less => Southeast,
+        },
+        29 | 28 | 25 | 24 => match last.x.cmp(&current.x) {
+            Greater => West,
+            Equal => unreachable!(),
+            Less => Northeast,
+        },
+        72..=75 => match last.x.cmp(&current.x) {
+            Greater => South,
+            Equal => Northeast,
             Less => unreachable!(),
         },
-        240 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
-            (Less, Equal) => current.y -= 1,
-            (Equal, Less) => current.x += 1,
-            (Greater, Equal) => current.y += 1,
-            (Equal, Greater) => current.x -= 1,
-            _ => unreachable!(),
-        },
-        249 => match last.x.cmp(&current.x) {
+        68..=71 => match last.x.cmp(&current.x) {
             Greater => unreachable!(),
-            Equal => current.x += 1,
-            Less => current.y -= 1,
+            Equal => Northwest,
+            Less => South,
         },
-        115 | 112 => match last.x.cmp(&current.x) {
-            Greater => current.x -= 1,
-            Equal => current.x += 1,
-            Less => current.y -= 1,
+
+        31 | 30 | 27 | 26 => match last.y.cmp(&current.y) {
+            Greater => West,
+            Equal => Southeast,
+            Less => Northeast,
         },
-        246 => match last.x.cmp(&current.x) {
-            Greater => current.y += 1,
-            Equal => current.x -= 1,
-            Less => current.x += 1,
+        76..=79 => match last.x.cmp(&current.x) {
+            Greater => Northwest,
+            Equal => Northeast,
+            Less => South,
         },
-        186 => match last.x.cmp(&current.x) {
-            Greater => unreachable!(),
-            Equal => current.x -= 1,
-            Less => {
-                current.x += 1;
-                return Some(current.with_x(current.x - 1));
-            }
+        47 | 45 | 39 | 37 => match last.y.cmp(&current.y) {
+            Greater => Southwest,
+            Equal => Northwest,
+            Less => East,
         },
-        231 => match last.x.cmp(&current.x) {
-            Greater => current.y += 1,
-            Equal => current.y -= 1,
-            Less => unreachable!(),
+        143 | 139 | 135 | 131 => match last.x.cmp(&current.x) {
+            Greater => North,
+            Equal => Southwest,
+            Less => Southeast,
         },
-        8 => {
-            current.x += 1;
-            current.y += 1;
-        }
+        10 => match last.y.cmp(&current.y) {
+            Greater | Equal => Southeast,
+            Less => Northeast,
+        },
         12 => match last.x.cmp(&current.x) {
-            Greater => {
-                current.x -= 1;
-                current.y -= 1;
-            }
+            Greater => Northwest,
             Equal => unreachable!(),
-            Less => {
-                current.x += 1;
-                current.y += 1;
-            }
-        },
-        44 => match last.x.cmp(&current.x) {
-            Greater => {
-                current.x -= 1;
-                current.y -= 1;
-            }
-            Equal => unreachable!(),
-            Less => current.x += 1,
-        },
-        24 => match last.x.cmp(&current.x) {
-            Greater => current.x -= 1,
-            Equal => unreachable!(),
-            Less => {
-                current.x += 1;
-                current.y += 1;
-            }
-        },
-        132 => match last.x.cmp(&current.x) {
-            Greater => unreachable!(),
-            Equal => {
-                current.x -= 1;
-                current.y -= 1;
-            }
-            Less => current.y += 1,
-        },
-        103 => match last.x.cmp(&current.x) {
-            Greater => {
-                current.x -= 1;
-                current.y += 1;
-            }
-            Equal => unreachable!(),
-            Less => current.y -= 1,
-        },
-        2 => {
-            current.x += 1;
-            current.y -= 1;
-        }
-        67 | 65 => match last.x.cmp(&current.x) {
-            Greater => unreachable!(),
-            Equal => {
-                current.x -= 1;
-                current.y += 1;
-            }
-            Less => current.y -= 1,
+            Less => Northeast,
         },
         3 => match last.x.cmp(&current.x) {
-            Greater => {
-                current.x -= 1;
-                current.y += 1;
-            }
+            Greater => Southwest,
             Equal => unreachable!(),
-            Less => {
-                current.x += 1;
-                current.y -= 1;
-            }
+            Less => Southeast,
         },
-        22 | 18 => match last.x.cmp(&current.x) {
-            Greater => current.x -= 1,
+        5 => match last.x.cmp(&current.x) {
+            Greater => Southwest,
             Equal => unreachable!(),
-            Less => {
-                current.x += 1;
-                current.y -= 1;
-            }
+            Less => Northwest,
         },
-        7 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
-            (Greater, Less) => {
-                current.x -= 1;
-                current.y += 1;
-            }
-            (Less, Greater) => {
-                current.x -= 1;
-                current.y -= 1;
-            }
-            (Less, Less) => {
-                current.x += 1;
-                current.y -= 1;
-            }
+        15 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+            (Greater, Less) => Northeast,
+            (Greater, Greater) => Northwest,
+            (Less, Less) => Southeast,
+            (Less, Greater) => Southwest,
             _ => unreachable!(),
         },
-        36 => match last.x.cmp(&current.x) {
-            Greater => {
-                current.x -= 1;
-                current.y -= 1;
-            }
-            Equal => unreachable!(),
-            Less => current.x += 1,
+
+        252 | 124..=126 | 120..=122 | 116..=118 | 112..=114 => match last.x.cmp(&current.x) {
+            Greater => West,
+            Equal => East,
+            Less => South,
         },
-        74 => match last.x.cmp(&current.x) {
-            Greater => current.y -= 1,
-            Equal => {
-                current.x += 1;
-                current.y += 1;
-            }
-            Less => unreachable!(),
-        }
-        250 => match last.y.cmp(&current.y) {
-            Greater => current.x -= 1,
-            Equal => current.y -= 1,
-            Less => current.y += 1,
-        }
-        0 | 255 => unreachable!(),
-        _ => {
-            todo!("\nadd handle for this case:\nlast point:{last}\ncurrent point:{current}\ncurrent neighbors:{neighbors}")
-        }
+        243 | 187 | 185 | 183 | 176..=179 => match last.x.cmp(&current.x) {
+            Greater => North,
+            Equal => West,
+            Less => East,
+        },
+        222 | 216..=220 | 214 | 208..=212 => match last.y.cmp(&current.y) {
+            Greater => West,
+            Equal => South,
+            Less => North,
+        },
+        237 | 233 | 227..=230 | 225 | 224 => match last.y.cmp(&current.y) {
+            Greater => South,
+            Equal => North,
+            Less => East,
+        },
+        7 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+            (Greater, Less) => Northwest,
+            (Less, Less) => Southeast,
+            (Less, Greater) => Southwest,
+            _ => unreachable!(),
+        },
+        14 | 11 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+            (Greater, Less) => Northeast,
+            (Less, Less) => Southeast,
+            (Greater, Greater) => Southwest,
+            _ => unreachable!(),
+        },
+        13 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+            (Less, Greater) => Northeast,
+            (Less, Less) => Southeast,
+            (Greater, Greater) => Southwest,
+            _ => unreachable!(),
+        },
     }
-    None
 }

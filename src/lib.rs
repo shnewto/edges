@@ -3,10 +3,11 @@
 use crate::bin_image::BinImage;
 #[cfg(feature = "bevy")]
 pub use bevy_math::prelude::{UVec2, Vec2};
-#[cfg(not(feature = "bevy"))]
+#[cfg(all(not(feature = "bevy"), feature = "glam-latest"))]
 pub use glam::{UVec2, Vec2};
+use rayon::prelude::*;
 use std::fmt;
-use utils::{handle_neighbors, in_polygon, is_corner};
+use utils::{handle_neighbors, in_polygon, Direction};
 
 mod bin_image;
 #[cfg(feature = "bevy")]
@@ -30,14 +31,14 @@ impl Edges {
     /// coordinates translated to either side of (0, 0)
     #[must_use]
     pub fn single_image_edge_translated(&self) -> Vec<Vec2> {
-        self.image_edges(true).into_iter().flatten().collect()
+        self.image_edges(true).into_par_iter().flatten().collect()
     }
 
     /// If there's only one sprite / object in the image, this returns just one, with
     /// coordinates left alone and all in positive x and y
     #[must_use]
     pub fn single_image_edge_raw(&self) -> Vec<Vec2> {
-        self.image_edges(false).into_iter().flatten().collect()
+        self.image_edges(false).into_par_iter().flatten().collect()
     }
 
     /// If there's more than one sprite / object in the image, this returns all it finds, with
@@ -63,19 +64,20 @@ impl Edges {
         // any that have at least one transparent / zero value neighbor then, while sorting into drawing
         // order, groups them into sets of connected pixels
         let corners: Vec<_> = (0..image.height() * image.width())
+            .into_par_iter()
             .map(|i| UVec2::new(i / image.height(), i % image.height()))
-            .filter(|p| image.get(*p) && is_corner(image.get_neighbors(*p)))
+            .filter(|p| image.get(*p) && image.is_corner(*p))
             .collect();
 
         let objects: Vec<_> = self
             .collect_objects(&corners)
-            .into_iter()
-            .map(|object| object.into_iter().map(|p| p.as_vec2()).collect())
+            .into_par_iter()
+            .map(|object| object.into_par_iter().map(|p| p.as_vec2()).collect())
             .collect();
         if translate {
             objects
-                .into_iter()
-                .map(|group| self.translate(group))
+                .into_par_iter()
+                .map(|object| self.translate(object))
                 .collect()
         } else {
             objects
@@ -91,31 +93,47 @@ impl Edges {
 
         while let Some(start) = corners.iter().find(|point| {
             objects
-                .iter()
-                .all(|object| !object.contains(point) && !in_polygon(**point, object))
+                .par_iter()
+                .all(|object| !(object.contains(point) || in_polygon(**point, object)))
         }) {
-            let object = self.collect_object(*start);
+            let mut current = *start;
+            let mut group: Vec<UVec2> = Vec::new();
+            group.push(current);
+            let object = loop {
+                let (last, neighbors) = (*group.last().unwrap(), self.image.get_neighbors(current));
+                if last != current {
+                    group.push(current);
+                }
+                match handle_neighbors(current, last, neighbors) {
+                    Direction::North => current.y += 1,
+                    Direction::South => current.y -= 1,
+                    Direction::East => current.x += 1,
+                    Direction::West => current.x -= 1,
+                    Direction::Northeast => {
+                        current.x += 1;
+                        current.y += 1;
+                    }
+                    Direction::Northwest => {
+                        current.x -= 1;
+                        current.y += 1;
+                    }
+                    Direction::Southeast => {
+                        current.x += 1;
+                        current.y -= 1;
+                    }
+                    Direction::Southwest => {
+                        current.x -= 1;
+                        current.y -= 1;
+                    }
+                }
+                if current == *start {
+                    break group;
+                }
+            };
             objects.push(object);
         }
 
         objects
-    }
-
-    fn collect_object(&self, mut current: UVec2) -> Vec<UVec2> {
-        let mut group: Vec<UVec2> = Vec::new();
-        group.push(current);
-        loop {
-            let (last, neighbors) = (*group.last().unwrap(), self.image.get_neighbors(current));
-            if last != current && is_corner(neighbors) {
-                group.push(current);
-            }
-            if let Some(point) = handle_neighbors(&mut current, last, neighbors) {
-                group.push(point);
-            }
-            if current == group[0] {
-                break group;
-            }
-        }
     }
 
     /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
@@ -163,9 +181,9 @@ impl fmt::Debug for Edges {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "{}",
+            "Edges {{{}\n}}",
             format!(
-                "Edges {{\nraw: {:#?},\ntranslated: {:#?}\n}}",
+                "\nraw: {:#?},\ntranslated: {:#?}",
                 self.image_edges(false),
                 self.image_edges(true),
             )
