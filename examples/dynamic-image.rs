@@ -9,8 +9,10 @@ fn main() {
 }
 
 fn draw_png(img_path: &str) {
-    let image = &image::open(Path::new(&format!("assets/{img_path}"))).unwrap();
-    let edges = Edges::from(image);
+    let image = image::open(Path::new(&format!("assets/{img_path}"))).unwrap();
+    // get the image's edges
+    let edges = Edges::from(&image);
+
     let scale = 8;
     let (width, height) = (
         i32::try_from(image.width()).expect("Image to wide.") * scale,
