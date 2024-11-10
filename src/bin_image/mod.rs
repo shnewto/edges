@@ -1,5 +1,14 @@
 use crate::{UVec2, Vec2};
-pub mod neighbors;
+pub mod neighbors {
+    pub const NORTH: u8 = 0b1000_0000;
+    pub const SOUTH: u8 = 0b0100_0000;
+    pub const EAST: u8 = 0b0010_0000;
+    pub const WEST: u8 = 0b0001_0000;
+    pub const NORTHEAST: u8 = 0b0000_1000;
+    pub const NORTHWEST: u8 = 0b0000_0100;
+    pub const SOUTHEAST: u8 = 0b0000_0010;
+    pub const SOUTHWEST: u8 = 0b0000_0001;
+}
 
 pub struct BinImage {
     data: Vec<u8>,
@@ -94,16 +103,51 @@ impl BinImage {
         if x < u32::MAX && y < u32::MAX && self.get(UVec2::new(x + 1, y + 1)) {
             neighbors |= neighbors::NORTHEAST;
         }
-        if x > u32::MIN && y > u32::MIN && self.get(UVec2::new(x - 1, y - 1)) {
+        if x > u32::MIN && y < u32::MAX && self.get(UVec2::new(x - 1, y + 1)) {
             neighbors |= neighbors::NORTHWEST;
         }
         if x < u32::MAX && y > u32::MIN && self.get(UVec2::new(x + 1, y - 1)) {
             neighbors |= neighbors::SOUTHEAST;
         }
-        if x > u32::MIN && y < u32::MAX && self.get(UVec2::new(x - 1, y + 1)) {
+        if x > u32::MIN && y > u32::MIN && self.get(UVec2::new(x - 1, y - 1)) {
             neighbors |= neighbors::SOUTHWEST;
         }
         neighbors
+    }
+
+    pub fn is_corner(&self, p: UVec2) -> bool {
+        !matches!(
+            self.get_neighbors(p),
+            255
+                | 239
+                | 238
+                | 234..=236
+                | 231
+                | 223
+                | 221
+                | 215
+                | 213
+                | 212
+                | 209
+                | 204
+                | 201
+                | 195..=197
+                | 188..=192
+                | 186
+                | 184
+                | 181
+                | 180
+                | 127
+                | 123
+                | 119
+                | 118
+                | 113..=115
+                | 58
+                | 56
+                | 52..=54
+                | 48..=50
+                | 0
+        )
     }
 
     /// Translates a point in positive (x, y) coordinates to a coordinate system centered at (0, 0).
