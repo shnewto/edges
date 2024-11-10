@@ -42,19 +42,20 @@ fn main() {
     )
     .unwrap();
 
-    draw_png(boulders, "boulders");
-    draw_png(more_lines, "more-lines");
-    draw_png(diagonals, "diagonals");
+    draw_png(&boulders, "boulders");
+    draw_png(&more_lines, "more-lines");
+    draw_png(&diagonals, "diagonals");
 }
 
-fn draw_png(image: Image, img_path: &str) {
+fn draw_png(image: &Image, img_path: &str) {
+    // get the image's edges
+    let edges = Edges::from(image);
+
     let scale = 8;
     let (width, height) = (
         i32::try_from(image.width()).expect("Image to wide.") * scale,
         i32::try_from(image.height()).expect("Image to tall.") * scale,
     );
-    // get the image's edges
-    let edges = Edges::from(image);
 
     // draw the edges to a png
     let mut dt = DrawTarget::new(width, height);
