@@ -1,4 +1,5 @@
-use crate::{UVec2, Vec2};
+use crate::{utils::is_corner, UVec2, Vec2};
+use rayon::prelude::*;
 pub mod neighbors {
     pub const NORTH: u8 = 0b1000_0000;
     pub const SOUTH: u8 = 0b0100_0000;
@@ -37,10 +38,10 @@ impl BinImage {
         let compress_step = data.len() / (height * width) as usize;
         Self {
             data: data
-                .chunks(8 * compress_step)
+                .par_chunks(8 * compress_step)
                 .map(|chunk| {
                     chunk
-                        .chunks(compress_step)
+                        .par_chunks(compress_step)
                         .map(|chunk| chunk.iter().any(|i| *i != 0))
                         .enumerate()
                         .map(|(index, bit)| u8::from(bit) << index)
@@ -62,15 +63,17 @@ impl BinImage {
     ///
     /// Returns `true` if the pixel is "on" (1), and `false` if it is "off" (0) or out of bounds.
     pub fn get(&self, p: UVec2) -> bool {
-        let (x, y) = (p.x, p.y);
-        let index = y * self.width + x;
+        if p.x >= self.width {
+            return false;
+        }
+        let index = p.y * self.width + p.x;
         if let Some(mut byte) = self
             .data
             .get((index / 8) as usize) // index of byte
             .copied()
         {
             byte >>= index % 8; // index of bit
-            x < self.width && byte & 1 > 0
+            byte & 1 > 0
         } else {
             false
         }
@@ -116,38 +119,7 @@ impl BinImage {
     }
 
     pub fn is_corner(&self, p: UVec2) -> bool {
-        !matches!(
-            self.get_neighbors(p),
-            255
-                | 239
-                | 238
-                | 234..=236
-                | 231
-                | 223
-                | 221
-                | 215
-                | 213
-                | 212
-                | 209
-                | 204
-                | 201
-                | 195..=197
-                | 188..=192
-                | 186
-                | 184
-                | 181
-                | 180
-                | 127
-                | 123
-                | 119
-                | 118
-                | 113..=115
-                | 58
-                | 56
-                | 52..=54
-                | 48..=50
-                | 0
-        )
+        is_corner(self.get_neighbors(p))
     }
 
     /// Translates a point in positive (x, y) coordinates to a coordinate system centered at (0, 0).
@@ -176,7 +148,7 @@ impl BinImage {
     ///
     /// A vector of `Vec2` representing the translated coordinates.
     pub fn translate(&self, v: Vec<Vec2>) -> Vec<Vec2> {
-        v.into_iter().map(|p| self.translate_point(p)).collect()
+        v.into_par_iter().map(|p| self.translate_point(p)).collect()
     }
 
     pub const fn height(&self) -> u32 {
