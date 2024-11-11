@@ -1,6 +1,10 @@
-use bevy::{prelude::Image, render::texture::ImageType};
+use bevy_render::{
+    prelude::Image,
+    render_asset::RenderAssetUsages,
+    texture::{CompressedImageFormats, ImageSampler, ImageType},
+};
 use edges::Edges;
-use raqote::*;
+use raqote::{DrawOptions, DrawTarget, PathBuilder, SolidSource, Source, StrokeStyle};
 // in an actual bevy app, you wouldn't need all this building an Image from scratch logic,
 // it'd be something closer to this:
 // `let image = image_assets.get(handle).unwrap();`
@@ -11,39 +15,54 @@ fn main() {
     let boulders = Image::from_buffer(
         include_bytes!("../assets/boulders.png"),
         ImageType::Extension("png"),
-        Default::default(),
+        CompressedImageFormats::default(),
         true,
-        Default::default(),
-        Default::default(),
+        ImageSampler::default(),
+        RenderAssetUsages::default(),
     )
     .unwrap();
 
     let more_lines = Image::from_buffer(
         include_bytes!("../assets/more-lines.png"),
         ImageType::Extension("png"),
-        Default::default(),
+        CompressedImageFormats::default(),
         true,
-        Default::default(),
-        Default::default(),
+        ImageSampler::default(),
+        RenderAssetUsages::default(),
     )
     .unwrap();
 
-    draw_png(boulders, "boulders.png");
-    draw_png(more_lines, "more-lines.png");
+    let diagonals = Image::from_buffer(
+        include_bytes!("../assets/diagonals.png"),
+        ImageType::Extension("png"),
+        CompressedImageFormats::default(),
+        true,
+        ImageSampler::default(),
+        RenderAssetUsages::default(),
+    )
+    .unwrap();
+
+    draw_png(&boulders, "boulders");
+    draw_png(&more_lines, "more-lines");
+    draw_png(&diagonals, "diagonals");
 }
 
-fn draw_png(image: Image, img_path: &str) {
+fn draw_png(image: &Image, img_path: &str) {
     // get the image's edges
-    let edges = Edges::from(image.clone());
+    let edges = Edges::from(image);
+
     let scale = 8;
-    let (width, height) = (image.width() as i32 * scale, image.height() as i32 * scale);
+    let (width, height) = (
+        i32::try_from(image.width()).expect("Image to wide.") * scale,
+        i32::try_from(image.height()).expect("Image to tall.") * scale,
+    );
 
     // draw the edges to a png
     let mut dt = DrawTarget::new(width, height);
 
-    let objects_iter = edges.multi_image_edges_raw().into_iter();
+    let objects = edges.multi_image_edges_raw();
 
-    for object in objects_iter {
+    for object in objects {
         let mut pb = PathBuilder::new();
         let mut edges_iter = object.into_iter();
 
@@ -71,6 +90,6 @@ fn draw_png(image: Image, img_path: &str) {
         );
     }
 
-    dt.write_png(format!("edges-{}", img_path)).unwrap();
-    _ = open::that(format!("edges-{}", img_path));
+    dt.write_png(format!("edges-{img_path}.png")).unwrap();
+    _ = open::that(format!("edges-{img_path}.png"));
 }

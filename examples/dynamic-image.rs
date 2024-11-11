@@ -1,5 +1,5 @@
 use edges::Edges;
-use raqote::*;
+use raqote::{DrawOptions, DrawTarget, PathBuilder, SolidSource, Source, StrokeStyle};
 use std::path::Path;
 
 fn main() {
@@ -9,10 +9,15 @@ fn main() {
 }
 
 fn draw_png(img_path: &str) {
-    let image = &image::open(Path::new(&format!("assets/{}", img_path))).unwrap();
-    let edges = Edges::from(image);
+    let image = image::open(Path::new(&format!("assets/{img_path}"))).unwrap();
+    // get the image's edges
+    let edges = Edges::from(&image);
+
     let scale = 8;
-    let (width, height) = (image.width() as i32 * scale, image.height() as i32 * scale);
+    let (width, height) = (
+        i32::try_from(image.width()).expect("Image to wide.") * scale,
+        i32::try_from(image.height()).expect("Image to tall.") * scale,
+    );
 
     // draw the edges to a png
     let mut dt = DrawTarget::new(width, height);
@@ -41,6 +46,6 @@ fn draw_png(img_path: &str) {
         &DrawOptions::new(),
     );
 
-    dt.write_png(format!("edges-{}", img_path)).unwrap();
-    _ = open::that(format!("edges-{}", img_path));
+    dt.write_png(format!("edges-{img_path}")).unwrap();
+    _ = open::that(format!("edges-{img_path}"));
 }
