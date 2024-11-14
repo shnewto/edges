@@ -131,10 +131,10 @@ impl BinImage {
     /// # Returns
     ///
     /// A new `Vec2` representing the translated coordinates
-    fn translate_point(&self, p: Vec2) -> Vec2 {
+    const fn translate_point(&self, p: UVec2) -> Vec2 {
         Vec2::new(
-            p.x - ((self.width / 2) as f32 - 1.0),
-            ((self.height / 2) as f32 - 1.0) - p.y,
+            (p.x - self.width / 2 - 1) as f32,
+            (self.height / 2 - p.y - 1) as f32,
         )
     }
 
@@ -147,7 +147,7 @@ impl BinImage {
     /// # Returns
     ///
     /// A vector of `Vec2` representing the translated coordinates.
-    pub fn translate(&self, v: Vec<Vec2>) -> Vec<Vec2> {
+    pub fn translate(&self, v: Vec<UVec2>) -> Vec<Vec2> {
         v.into_par_iter().map(|p| self.translate_point(p)).collect()
     }
 
