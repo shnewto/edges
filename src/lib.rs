@@ -15,6 +15,7 @@ mod bin_image;
 mod tests;
 mod utils;
 
+/// A struct representing the edges of a image.
 pub struct Edges {
     image: BinImage,
 }
@@ -80,14 +81,14 @@ impl Edges {
         self.image_edges()
     }
 
-    /// Takes `Edges` and a boolean to indicate whether to translate
-    /// the points you get back to either side of (0, 0) instead of everything in positive x and y.
+    /// Identifies the edge points of the image based on corner detection.
+    ///
+    /// # Returns
+    ///
+    /// A vector of vectors of `UVec2` representing the edges found in the image.
     #[must_use]
     pub fn image_edges(&self) -> Vec<Vec<UVec2>> {
         let image = &self.image;
-        // Marching squares adjacent, walks all the pixels in the provided data and keeps track of
-        // any that have at least one transparent / zero value neighbor then, while sorting into drawing
-        // order, groups them into sets of connected pixels
         let corners: Vec<_> = (0..image.height() * image.width())
             .into_par_iter()
             .map(|i| UVec2::new(i / image.height(), i % image.height()))
@@ -97,6 +98,15 @@ impl Edges {
         self.collect_objects(&corners)
     }
 
+    /// Collects the edge points into distinct objects based on connectivity.
+    ///
+    /// # Arguments
+    ///
+    /// * `corners` - A slice of `UVec2` representing corner points to be grouped into objects.
+    ///
+    /// # Returns
+    ///
+    /// A vector of vectors of `UVec2` representing the grouped edge objects.
     fn collect_objects(&self, corners: &[UVec2]) -> Vec<Vec<UVec2>> {
         if corners.is_empty() {
             return Vec::new();
@@ -149,11 +159,11 @@ impl Edges {
         objects
     }
 
-    /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
+    /// Translates a vector of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
     ///
     /// # Arguments
     ///
-    /// * `v` - An `Vec` of `Vec2` points to translate.
+    /// * `v` - A vector of `UVec2` points to translate.
     ///
     /// # Returns
     ///
@@ -164,21 +174,54 @@ impl Edges {
         self.image.translate(v)
     }
 
-    /// Translates an `Vec` of `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
+    /// Translates a vector of vectors of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
     ///
     /// # Arguments
     ///
-    /// * `v` - An `Vec` of `Vec2` points to translate.
+    /// * `v` - A vector of vectors of `UVec2` points to translate.
     ///
     /// # Returns
     ///
-    /// A vector of vector of `Vec2` representing the translated objects.
+    /// A vector of vectors of `Vec2` representing the translated objects.
     #[inline]
     #[must_use]
     pub fn translate_objects(&self, v: Vec<Vec<UVec2>>) -> Vec<Vec<Vec2>> {
         v.into_par_iter()
             .map(|v| self.translate(v))
             .collect::<Vec<_>>()
+    }
+
+    /// Crops the edges of the image to the specified rectangular area.
+    ///
+    /// This method takes two points, `min` and `max`, which define the corners of the cropping rectangle.
+    /// The rectangle is defined in terms of the image's pixel coordinates, where `min` is the top-left corner
+    /// and `max` is the bottom-right corner. The method returns a new `Edges` instance that contains the cropped
+    /// image edges.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - A `UVec2` representing the top-left corner of the cropping rectangle.
+    /// * `max` - A `UVec2` representing the bottom-right corner of the cropping rectangle.
+    ///
+    /// # Returns
+    ///
+    /// A new `Edges` instance containing the cropped image edges based on the specified rectangle.
+    ///
+    /// # Panics
+    ///
+    /// This method will panic if the `min` and `max` coordinates are out of bounds of the original image dimensions
+    /// or if `min` is not less than `max`.
+    #[must_use]
+    pub fn crop(&self, min: UVec2, max: UVec2) -> Self {
+        Self {
+            image: self.image.crop(min, max),
+        }
+    }
+}
+
+impl From<Edges> for Vec<Vec<UVec2>> {
+    fn from(value: Edges) -> Vec<Vec<UVec2>> {
+        value.image_edges()
     }
 }
 

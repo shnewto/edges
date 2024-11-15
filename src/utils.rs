@@ -1,7 +1,17 @@
 use crate::UVec2;
 use std::cmp::Ordering::{Equal, Greater, Less};
 
-// Get the bounding box of the polygon
+/// Calculates the bounding box of the given polygon.
+///
+/// # Arguments
+///
+/// * `polygon` - A slice of `UVec2` points representing the vertices of the polygon.
+///
+/// # Returns
+///
+/// Returns an `Option<(UVec2, UVec2)>` where the first `UVec2` is the minimum point (bottom-left)
+/// and the second `UVec2` is the maximum point (top-right) of the bounding box. Returns `None`
+/// if the polygon is empty.
 fn bounding_box(polygon: &[UVec2]) -> Option<(UVec2, UVec2)> {
     polygon
         .iter()
@@ -10,6 +20,16 @@ fn bounding_box(polygon: &[UVec2]) -> Option<(UVec2, UVec2)> {
         .reduce(|(min, max), (a, b)| (min.min(a), max.max(b)))
 }
 
+/// Determines if a given point is inside a polygon using the ray-casting algorithm.
+///
+/// # Arguments
+///
+/// * `point` - A `UVec2` representing the point to check.
+/// * `polygon` - A slice of `UVec2` points representing the vertices of the polygon.
+///
+/// # Returns
+///
+/// Returns `true` if the point is inside the polygon, and `false` if it is outside or on the edge.
 pub fn in_polygon(point: UVec2, polygon: &[UVec2]) -> bool {
     if let Some((min, max)) = bounding_box(polygon) {
         // Check if the point is within the bounding box
@@ -35,6 +55,15 @@ pub fn in_polygon(point: UVec2, polygon: &[UVec2]) -> bool {
     is_inside
 }
 
+/// Checks if the given neighbors state indicates a corner pixel.
+///
+/// # Arguments
+///
+/// * `neighbors` - A byte representing the state of neighboring pixels.
+///
+/// # Returns
+///
+/// Returns `true` if the pixel is a corner, and `false` otherwise.
 pub fn is_corner(neighbors: u8) -> bool {
     !matches!(
         neighbors,
@@ -71,6 +100,17 @@ pub enum Direction {
     Southwest,
 }
 
+/// Handles the neighbor states and determines the direction based on the current and last positions.
+///
+/// # Arguments
+///
+/// * `current` - A `UVec2` representing the current position.
+/// * `last` - A `UVec2` representing the last position.
+/// * `neighbors` - A byte representing the state of neighboring pixels.
+///
+/// # Returns
+///
+/// Returns a `Direction` indicating the direction of movement based on the neighbor states.
 #[allow(clippy::too_many_lines)]
 pub fn handle_neighbors(current: UVec2, last: UVec2, neighbors: u8) -> Direction {
     use Direction::{East, North, Northeast, Northwest, South, Southeast, Southwest, West};

@@ -8,8 +8,9 @@ get the edges of objects in images with transparency.
 
 ## supported image types
 
-- `image::DynamicImage`
-- `bevy::render::texture::Image` (or if you rather, `bevy::prelude::Image`)
+- `image::DynamicImage`.
+- `bevy::render::texture::Image` (or if you rather, `bevy::prelude::Image`).
+- your image if you implement `Into<Edges>` with `Edges::new`.
 
 ## using
 
@@ -22,23 +23,43 @@ let edges = Edges::from(image.unwrap());
 println!("{:#?}", edges.single_image_edge_translated());
 ```
 
-## how it works
+## How it works
 
-i was inspired by [a coding train (or, coding in the cabana rather)
-on an implementation of "marching squares"](https://youtu.be/0ZONMNUKTfU).
-so this crate takes a "march through all the values" approach to find edges, i.e.
-pixels with at least 1 empty neighboring pixel, but
-instead of drawing a contour in place,
-it just keeps track of all the actual pixel coordinates. to determine "empty" I bitwise
-or all the bytes for each pixel and,
-in images with transparency, "empty" is a zero value for the pixel.
+This crate is inspired by [a Coding Train video](https://youtu.be/0ZONMNUKTfU)
+on implementing "marching squares." It uses a "march through all the values"
+approach to identify edges, specifically targeting pixels that have at least
+one neighboring pixel that is "empty".
 
-after that, we need to put the coordinates in some kind of
-"drawing order" so whatever we pass all the points to,
-knows how we want the object constructed. for this, the
-crate collects all pixels, in order, that are a distance of 1 from eachother.
-if there are pixels that have a distance greater than 1
-from any pixel in an existing group, that pixel begins a new group.
+### Key Steps
+
+1. **Identifying Empty Pixels**:
+
+   - The crate determines whether a pixel is "empty" by performing
+     a bitwise OR operation on all the bytes for that pixel.
+   - In any images, a pixel is considered "empty" if it has a zero value.
+
+2. **Collecting Edge Pixels**:
+
+   - Instead of drawing contours directly,
+     the crate keeps track of the actual pixel coordinates that form the edges.
+   - It collects all edge pixels that are adjacent
+     to each other (i.e., have a distance of 1).
+
+3. **Grouping Pixels**:
+
+   - If there are pixels that are not adjacent
+     (i.e., have a distance greater than 1 from any existing group),
+     and are not in any group's polygon,
+     those pixels initiate a new group.
+   - This ensures that all edge pixels are organized into
+     distinct objects based on their connectivity.
+
+4. **Output**:
+   - The resulting edge coordinates are then available
+     for further processing or visualization.
+
+This method allows for efficient edge detection while maintaining
+the integrity of the pixel data, making it suitable for images with transparency.
 
 ## license
 
