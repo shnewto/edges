@@ -225,6 +225,12 @@ impl From<Edges> for Vec<Vec<UVec2>> {
     }
 }
 
+impl From<Edges> for Vec<Vec<UVec2>> {
+    fn from(value: Edges) -> Vec<Vec<UVec2>> {
+        value.image_edges()
+    }
+}
+
 #[cfg(feature = "bevy")]
 impl From<bevy_render::prelude::Image> for Edges {
     fn from(i: bevy_render::prelude::Image) -> Edges {
