@@ -138,8 +138,8 @@ impl BinImage {
     /// A new `Vec2` representing the translated coordinates
     const fn translate_point(&self, p: UVec2) -> Vec2 {
         Vec2::new(
-            (p.x - self.width / 2 - 1) as f32,
-            (self.height / 2 - p.y - 1) as f32,
+            p.x as f32 - (self.width / 2) as f32,
+            (self.height / 2) as f32 - p.y as f32,
         )
     }
 
