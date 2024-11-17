@@ -14,7 +14,7 @@ pub mod neighbors {
 }
 
 /// A struct representing a binary image.
-#[derive(Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct BinImage {
     data: Vec<u8>,
     height: u32,

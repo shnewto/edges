@@ -15,6 +15,8 @@ mod bin_image;
 mod tests;
 mod utils;
 
+/// A struct representing the edges of a image.
+#[derive(Clone)]
 pub struct Edges {
     image: BinImage,
 }
