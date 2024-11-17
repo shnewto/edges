@@ -216,15 +216,9 @@ impl From<&image::DynamicImage> for Edges {
 
 impl fmt::Debug for Edges {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Edges {{{}\n}}",
-            format!(
-                "\nraw: {:#?},\ntranslated: {:#?}",
-                self.image_edges(),
-                self.translate_objects(self.image_edges())
-            )
-            .replace('\n', "\n    "),
-        )
+        f.debug_struct("Edges")
+            .field("raw", &self.image_edges())
+            .field("translated", &self.translate_objects(self.image_edges()))
+            .finish()
     }
 }
