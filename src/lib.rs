@@ -212,13 +212,6 @@ impl Edges {
     ///
     /// This method will panic if the `min` and `max` coordinates are out of bounds of the original image dimensions
     /// or if `min` is not less than `max`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// let edges = Edges::new(10, 10, &data);
-    /// let cropped_edges = edges.crop(UVec2::new(2, 2), UVec2::new(5, 5));
-    /// ```
     #[must_use]
     pub fn crop(&self, min: UVec2, max: UVec2) -> Self {
         Self {

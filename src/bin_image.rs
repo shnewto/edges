@@ -175,6 +175,7 @@ impl BinImage {
     }
 
     /// Crops the image to a specified rectangular area defined by the `min` and `max` coordinates.
+    /// Adjusting automatically if the coordinates exceed the image boundaries.
     ///
     /// # Parameters
     /// - `min`: The top-left corner of the rectangle to crop. This should be a `UVec2` representing the x and y coordinates.
@@ -185,12 +186,6 @@ impl BinImage {
     ///
     /// # Panics
     /// This function will panic if the `min` coordinates are greater than the `max` coordinates.
-    ///
-    /// # Example
-    /// ```rust
-    /// let cropped_image = image.crop(UVec2::new(10, 10), UVec2::new(100, 100));
-    /// ```
-    /// This will crop the image from coordinates (10, 10) to (100, 100), adjusting automatically if the coordinates exceed the image boundaries.
     pub fn crop(&self, min: UVec2, max: UVec2) -> Self {
         assert!(min.x <= max.x && min.y <= max.y, "Invalid crop coordinates");
         let max = max.min(UVec2::new(self.width(), self.height()));
