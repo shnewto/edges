@@ -15,11 +15,22 @@ mod bin_image;
 mod tests;
 mod utils;
 
+/// A struct representing the edges of a image.
+#[derive(Clone)]
 pub struct Edges {
     image: BinImage,
 }
 
 impl Edges {
+    /// Creates a new `Edges` instance from the given dimensions and pixel data.
+    ///
+    /// # Arguments
+    ///
+    /// * `height` - The height of the image.
+    /// * `width` - The width of the image.
+    /// * `data` - A slice of bytes representing the pixel data of the image.
+    ///
+    #[inline]
     #[must_use]
     pub fn new(height: u32, width: u32, data: &[u8]) -> Self {
         Self {
@@ -27,63 +38,76 @@ impl Edges {
         }
     }
 
-    /// If there's only one sprite / object in the image, this returns just one, with
-    /// coordinates translated to either side of (0, 0)
+    /// Translates the edges of a single image into a coordinate system centered at (0, 0).
+    ///
+    /// # Returns
+    ///
+    /// A vector of `Vec2` representing the translated edge points.
+    #[inline]
     #[must_use]
     pub fn single_image_edge_translated(&self) -> Vec<Vec2> {
-        self.image_edges(true).into_par_iter().flatten().collect()
+        self.translate(self.single_image_edge_raw())
     }
 
-    /// If there's only one sprite / object in the image, this returns just one, with
-    /// coordinates left alone and all in positive x and y
+    /// Retrieves the raw edge points of a single image.
+    ///
+    /// # Returns
+    ///
+    /// A vector of `UVec2` representing the raw edge points.
+    #[inline]
     #[must_use]
-    pub fn single_image_edge_raw(&self) -> Vec<Vec2> {
-        self.image_edges(false).into_par_iter().flatten().collect()
+    pub fn single_image_edge_raw(&self) -> Vec<UVec2> {
+        self.image_edges().into_par_iter().flatten().collect()
     }
 
-    /// If there's more than one sprite / object in the image, this returns all it finds, with
-    /// coordinates translated to either side of (0, 0)
+    /// Translates the edges of multiple images into a coordinate system centered at (0, 0).
+    ///
+    /// # Returns
+    ///
+    /// A vector of vectors of `Vec2` representing the translated edge points of each image.
+    #[inline]
     #[must_use]
     pub fn multi_image_edge_translated(&self) -> Vec<Vec<Vec2>> {
-        self.image_edges(true)
+        self.translate_objects(self.multi_image_edge_raw())
     }
 
-    /// If there's more than one sprite / object in the image, this returns all it finds, with
-    /// coordinates left alone and all in positive x and y
+    /// Retrieves the raw edge points of multiple images.
+    ///
+    /// # Returns
+    ///
+    /// A vector of vectors of `UVec2` representing the raw edge points of each image.
+    #[inline]
     #[must_use]
-    pub fn multi_image_edges_raw(&self) -> Vec<Vec<Vec2>> {
-        self.image_edges(false)
+    pub fn multi_image_edge_raw(&self) -> Vec<Vec<UVec2>> {
+        self.image_edges()
     }
 
-    /// Takes `Edges` and a boolean to indicate whether to translate
-    /// the points you get back to either side of (0, 0) instead of everything in positive x and y.
+    /// Identifies the edge points of the image based on corner detection.
+    ///
+    /// # Returns
+    ///
+    /// A vector of vectors of `UVec2` representing the edges found in the image.
     #[must_use]
-    pub fn image_edges(&self, translate: bool) -> Vec<Vec<Vec2>> {
+    pub fn image_edges(&self) -> Vec<Vec<UVec2>> {
         let image = &self.image;
-        // Marching squares adjacent, walks all the pixels in the provided data and keeps track of
-        // any that have at least one transparent / zero value neighbor then, while sorting into drawing
-        // order, groups them into sets of connected pixels
         let corners: Vec<_> = (0..image.height() * image.width())
             .into_par_iter()
             .map(|i| UVec2::new(i / image.height(), i % image.height()))
-            .filter(|p| image.get(*p) && image.is_corner(*p))
+            .filter(|p| image.is_corner(*p))
             .collect();
 
-        let objects: Vec<_> = self
-            .collect_objects(&corners)
-            .into_par_iter()
-            .map(|object| object.into_par_iter().map(|p| p.as_vec2()).collect())
-            .collect();
-        if translate {
-            objects
-                .into_par_iter()
-                .map(|object| self.translate(object))
-                .collect()
-        } else {
-            objects
-        }
+        self.collect_objects(&corners)
     }
 
+    /// Collects the edge points into distinct objects based on connectivity.
+    ///
+    /// # Arguments
+    ///
+    /// * `corners` - A slice of `UVec2` representing corner points to be grouped into objects.
+    ///
+    /// # Returns
+    ///
+    /// A vector of vectors of `UVec2` representing the grouped edge objects.
     fn collect_objects(&self, corners: &[UVec2]) -> Vec<Vec<UVec2>> {
         if corners.is_empty() {
             return Vec::new();
@@ -136,18 +160,69 @@ impl Edges {
         objects
     }
 
-    /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
+    /// Translates a vector of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
     ///
     /// # Arguments
     ///
-    /// * `v` - An `Vec` of `Vec2` points to translate.
+    /// * `v` - A vector of `UVec2` points to translate.
     ///
     /// # Returns
     ///
     /// A vector of `Vec2` representing the translated coordinates.
+    #[inline]
     #[must_use]
-    pub fn translate(&self, v: Vec<Vec2>) -> Vec<Vec2> {
+    pub fn translate(&self, v: Vec<UVec2>) -> Vec<Vec2> {
         self.image.translate(v)
+    }
+
+    /// Translates a vector of vectors of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
+    ///
+    /// # Arguments
+    ///
+    /// * `v` - A vector of vectors of `UVec2` points to translate.
+    ///
+    /// # Returns
+    ///
+    /// A vector of vectors of `Vec2` representing the translated objects.
+    #[inline]
+    #[must_use]
+    pub fn translate_objects(&self, v: Vec<Vec<UVec2>>) -> Vec<Vec<Vec2>> {
+        v.into_par_iter()
+            .map(|v| self.translate(v))
+            .collect::<Vec<_>>()
+    }
+
+    /// Crops the edges of the image to the specified rectangular area.
+    ///
+    /// This method takes two points, `min` and `max`, which define the corners of the cropping rectangle.
+    /// The rectangle is defined in terms of the image's pixel coordinates, where `min` is the top-left corner
+    /// and `max` is the bottom-right corner. The method returns a new `Edges` instance that contains the cropped
+    /// image edges.
+    ///
+    /// # Arguments
+    ///
+    /// * `min` - A `UVec2` representing the top-left corner of the cropping rectangle.
+    /// * `max` - A `UVec2` representing the bottom-right corner of the cropping rectangle.
+    ///
+    /// # Returns
+    ///
+    /// A new `Edges` instance containing the cropped image edges based on the specified rectangle.
+    ///
+    /// # Panics
+    ///
+    /// This method will panic if the `min` and `max` coordinates are out of bounds of the original image dimensions
+    /// or if `min` is not less than `max`.
+    #[must_use]
+    pub fn crop(&self, min: UVec2, max: UVec2) -> Self {
+        Self {
+            image: self.image.crop(min, max),
+        }
+    }
+}
+
+impl From<Edges> for Vec<Vec<UVec2>> {
+    fn from(value: Edges) -> Vec<Vec<UVec2>> {
+        value.image_edges()
     }
 }
 
@@ -179,15 +254,9 @@ impl From<&image::DynamicImage> for Edges {
 
 impl fmt::Debug for Edges {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Edges {{{}\n}}",
-            format!(
-                "\nraw: {:#?},\ntranslated: {:#?}",
-                self.image_edges(false),
-                self.image_edges(true),
-            )
-            .replace('\n', "\n    "),
-        )
+        f.debug_struct("Edges")
+            .field("raw", &self.image_edges())
+            .field("translated", &self.translate_objects(self.image_edges()))
+            .finish()
     }
 }
