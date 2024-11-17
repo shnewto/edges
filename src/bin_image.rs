@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{utils::is_corner, UVec2, Vec2};
 use rayon::prelude::*;
 pub mod neighbors {
@@ -13,6 +15,7 @@ pub mod neighbors {
 }
 
 /// A struct representing a binary image.
+#[derive(Debug)]
 pub struct BinImage {
     data: Vec<u8>,
     height: u32,
@@ -171,40 +174,6 @@ impl BinImage {
         self.width
     }
 
-    /// Crops the image to a specified rectangular area defined by the `min` and `max` coordinates.
-    /// Adjusting automatically if the coordinates exceed the image boundaries.
-    ///
-    /// # Parameters
-    /// - `min`: The top-left corner of the rectangle to crop. This should be a `UVec2` representing the x and y coordinates.
-    /// - `max`: The bottom-right corner of the rectangle to crop. This should also be a `UVec2` representing the x and y coordinates.
-    ///
-    /// # Returns
-    /// A new `Self` (the cropped image) containing only the pixels within the specified rectangle. If the crop area is invalid (e.g., zero width or height), an empty image will be returned.
-    ///
-    /// # Panics
-    /// This function will panic if the `min` coordinates are greater than the `max` coordinates.
-    pub fn crop(&self, min: UVec2, max: UVec2) -> Self {
-        assert!(min.x <= max.x && min.y <= max.y, "Invalid crop coordinates");
-        let max = max.min(UVec2::new(self.width(), self.height()));
-        let min = min.min(UVec2::new(self.width(), self.height()));
-        let (height, width) = (max.y - min.y, max.x - min.x);
-        if height * width == 0 {
-            return Self::default();
-        }
-        let mut data: Vec<u8> = vec![0; ((width + 7) / 8 * height) as usize];
-        (0..(height * width))
-            .filter(|&i| self.get(UVec2::new(min.x + i % width, min.y + i / width)))
-            .for_each(|i| {
-                let byte_index = (i / 8) as usize;
-                let bit_index = i % 8;
-                data[byte_index] |= 1 << bit_index;
-            });
-        Self {
-            data,
-            height,
-            width,
-        }
-    }
 }
 
 impl Display for BinImage {
