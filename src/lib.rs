@@ -92,7 +92,7 @@ impl Edges {
         let corners: Vec<_> = (0..image.height() * image.width())
             .into_par_iter()
             .map(|i| UVec2::new(i / image.height(), i % image.height()))
-            .filter(|p| image.get(*p) && image.is_corner(*p))
+            .filter(|p| image.is_corner(*p))
             .collect();
 
         self.collect_objects(&corners)

@@ -124,7 +124,7 @@ impl BinImage {
     }
 
     pub fn is_corner(&self, p: UVec2) -> bool {
-        is_corner(self.get_neighbors(p))
+        self.get(p) && is_corner(self.get_neighbors(p))
     }
 
     /// Translates a point in positive (x, y) coordinates to a coordinate system centered at (0, 0).
