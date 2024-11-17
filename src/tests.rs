@@ -14,7 +14,7 @@ fn same_image_same_edges() {
         include_bytes!("../assets/car.png"), // buffer
         ImageType::Extension("png"),
         CompressedImageFormats::default(),
-        true, //
+        true,
         ImageSampler::default(),
         RenderAssetUsages::default(),
     )
@@ -40,7 +40,7 @@ fn same_images_same_edges() {
         include_bytes!("../assets/boulders.png"), // buffer
         ImageType::Extension("png"),
         CompressedImageFormats::default(),
-        true, //
+        true,
         ImageSampler::default(),
         RenderAssetUsages::default(),
     )
@@ -48,8 +48,8 @@ fn same_images_same_edges() {
     let bevy_edges = Edges::from(bevy_image);
 
     assert_eq!(
-        dynamic_edges.multi_image_edges_raw(),
-        bevy_edges.multi_image_edges_raw()
+        dynamic_edges.multi_image_edge_raw(),
+        bevy_edges.multi_image_edge_raw()
     );
     assert_eq!(
         dynamic_edges.multi_image_edge_translated(),
