@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{utils::is_corner, UVec2, Vec2};
 use rayon::prelude::*;
 pub mod neighbors {
@@ -11,6 +13,8 @@ pub mod neighbors {
     pub const SOUTHWEST: u8 = 0b0000_0001;
 }
 
+/// A struct representing a binary image.
+#[derive(Debug)]
 pub struct BinImage {
     data: Vec<u8>,
     height: u32,
@@ -157,5 +161,22 @@ impl BinImage {
 
     pub const fn width(&self) -> u32 {
         self.width
+    }
+
+}
+
+impl Display for BinImage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for y in 0..self.height() {
+            for x in 0..self.width() {
+                if self.get(UVec2::new(x, y)) {
+                    write!(f, "█")?;
+                } else {
+                    write!(f, "-")?;
+                }
+            }
+            writeln!(f)?;
+        }
+        Ok(())
     }
 }
