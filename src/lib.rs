@@ -23,13 +23,6 @@ pub struct Edges {
 
 impl Edges {
     /// Creates a new `Edges` instance from the given dimensions and pixel data.
-    ///
-    /// # Arguments
-    ///
-    /// * `height` - The height of the image.
-    /// * `width` - The width of the image.
-    /// * `data` - A slice of bytes representing the pixel data of the image.
-    ///
     #[inline]
     #[must_use]
     pub fn new(height: u32, width: u32, data: &[u8]) -> Self {
@@ -153,10 +146,6 @@ impl Edges {
 
     /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
     ///
-    /// # Arguments
-    ///
-    /// * `v` - An `Vec` of `Vec2` points to translate.
-    ///
     /// # Returns
     ///
     /// A vector of `Vec2` representing the translated coordinates.
@@ -167,10 +156,6 @@ impl Edges {
     }
 
     /// Translates an `Vec` of `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
-    ///
-    /// # Arguments
-    ///
-    /// * `v` - An `Vec` of `Vec2` points to translate.
     ///
     /// # Returns
     ///

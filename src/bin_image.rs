@@ -86,10 +86,6 @@ impl BinImage {
 
     /// Gets the values of the neighboring pixels (8-connectivity) around the given coordinate.
     ///
-    /// # Arguments
-    ///
-    /// * `p` - A `UVec2` representing the coordinates of the center pixel.
-    ///
     /// # Returns
     ///
     /// An byte representing the state of the neighboring pixels.
@@ -129,10 +125,6 @@ impl BinImage {
 
     /// Translates a point in positive (x, y) coordinates to a coordinate system centered at (0, 0).
     ///
-    /// # Arguments
-    ///
-    /// * `p` - A `Vec2` representing the point to translate.
-    ///
     /// # Returns
     ///
     /// A new `Vec2` representing the translated coordinates
@@ -144,10 +136,6 @@ impl BinImage {
     }
 
     /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
-    ///
-    /// # Arguments
-    ///
-    /// * `v` - An `Vec` of `Vec2` points to translate.
     ///
     /// # Returns
     ///
@@ -163,7 +151,6 @@ impl BinImage {
     pub const fn width(&self) -> u32 {
         self.width
     }
-
 }
 
 impl Display for BinImage {
