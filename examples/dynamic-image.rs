@@ -40,7 +40,7 @@ fn draw_png(img_path: &str) {
             a: 0xff,
         }),
         &StrokeStyle {
-            width: 1.,
+            width: scale as f32,
             ..StrokeStyle::default()
         },
         &DrawOptions::new(),
