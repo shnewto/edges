@@ -35,7 +35,7 @@ impl BinImage {
     ///
     /// This function will panic if the length of `data` is less than `height * width`.
     pub fn new(height: u32, width: u32, data: &[u8]) -> Self {
-        assert!(
+        debug_assert!(
             data.len() >= (height * width) as usize,
             "data must not be smaller than image dimensions"
         );
@@ -68,18 +68,19 @@ impl BinImage {
     /// Returns `true` if the pixel is "on" (1), and `false` if it is "off" (0) or out of bounds.
     pub fn get(&self, p: UVec2) -> bool {
         if p.x >= self.width {
-            return false;
-        }
-        let index = p.y * self.width + p.x;
-        if let Some(mut byte) = self
-            .data
-            .get((index / 8) as usize) // index of byte
-            .copied()
-        {
-            byte >>= index % 8; // index of bit
-            byte & 1 > 0
-        } else {
             false
+        } else {
+            let index = p.y * self.width + p.x;
+            if let Some(mut byte) = self
+                .data
+                .get((index / 8) as usize) // index of byte
+                .copied()
+            {
+                byte >>= index % 8; // index of bit
+                byte & 1 > 0
+            } else {
+                false
+            }
         }
     }
 
