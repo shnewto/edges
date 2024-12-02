@@ -21,7 +21,7 @@ pedantic = { level = "warn", priority = 0 }
 [features]
 default = ["bevy"]
 glam-latest = ["dep:glam"]
-bevy = ["dep:bevy_math", "dep:bevy_render"]
+bevy = ["dep:bevy_math", "dep:bevy_image"]
 
 [dependencies]
 image = "0.25"
@@ -32,18 +32,23 @@ version = "0.29"
 optional = true
 
 [dependencies.bevy_math]
-version = "0.14"
+version = "0.15"
 default-features = false
 optional = true
 
-[dependencies.bevy_render]
-version = "0.14"
+[dependencies.bevy_image]
+version = "0.15"
 default-features = false
+features = ["png"]
 optional = true
 
 [dev-dependencies]
 raqote = "0.8"
 open = "5.1"
+
+[dev-dependencies.bevy_render]
+version = "0.15"
+default-features = false
 
 [[example]]
 name = "bevy-image"

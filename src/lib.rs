@@ -176,8 +176,8 @@ impl From<Edges> for Vec<Vec<UVec2>> {
 }
 
 #[cfg(feature = "bevy")]
-impl From<bevy_render::prelude::Image> for Edges {
-    fn from(i: bevy_render::prelude::Image) -> Edges {
+impl From<bevy_image::prelude::Image> for Edges {
+    fn from(i: bevy_image::prelude::Image) -> Edges {
         Self::new(i.height(), i.width(), &i.data)
     }
 }
@@ -189,8 +189,8 @@ impl From<image::DynamicImage> for Edges {
 }
 
 #[cfg(feature = "bevy")]
-impl From<&bevy_render::prelude::Image> for Edges {
-    fn from(i: &bevy_render::prelude::Image) -> Edges {
+impl From<&bevy_image::prelude::Image> for Edges {
+    fn from(i: &bevy_image::prelude::Image) -> Edges {
         Self::new(i.height(), i.width(), &i.data)
     }
 }

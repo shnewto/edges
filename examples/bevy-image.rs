@@ -1,8 +1,5 @@
-use bevy_render::{
-    prelude::Image,
-    render_asset::RenderAssetUsages,
-    texture::{CompressedImageFormats, ImageSampler, ImageType},
-};
+use bevy_image::{prelude::Image, CompressedImageFormats, ImageSampler, ImageType};
+use bevy_render::render_asset::RenderAssetUsages;
 use edges::Edges;
 use raqote::{DrawOptions, DrawTarget, PathBuilder, SolidSource, Source, StrokeStyle};
 // in an actual bevy app, you wouldn't need all this building an Image from scratch logic,
