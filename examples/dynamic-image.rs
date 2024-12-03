@@ -15,8 +15,8 @@ fn draw_png(img_path: &str) {
 
     let scale = 8;
     let (width, height) = (
-        i32::try_from(image.width()).expect("Image to wide.") * scale,
-        i32::try_from(image.height()).expect("Image to tall.") * scale,
+        i32::try_from(image.width() * scale).expect("Image to wide."),
+        i32::try_from(image.height() * scale).expect("Image to tall."),
     );
 
     // draw the edges to a png
@@ -25,9 +25,9 @@ fn draw_png(img_path: &str) {
 
     let mut edges_iter = edges.single_image_edge_raw().into_iter();
     let first_edge = edges_iter.next().unwrap();
-    pb.move_to(first_edge.x * scale as f32, first_edge.y * scale as f32);
+    pb.move_to((first_edge.x * scale) as f32, (first_edge.y * scale) as f32);
     for edge in edges_iter {
-        pb.line_to(edge.x * scale as f32, edge.y * scale as f32);
+        pb.line_to((edge.x * scale) as f32, (edge.y * scale) as f32);
     }
 
     let path = pb.finish();
@@ -40,7 +40,7 @@ fn draw_png(img_path: &str) {
             a: 0xff,
         }),
         &StrokeStyle {
-            width: 1.,
+            width: scale as f32,
             ..StrokeStyle::default()
         },
         &DrawOptions::new(),

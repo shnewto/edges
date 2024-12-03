@@ -1,8 +1,5 @@
-use bevy_render::{
-    prelude::Image,
-    render_asset::RenderAssetUsages,
-    texture::{CompressedImageFormats, ImageSampler, ImageType},
-};
+use bevy_image::{prelude::Image, CompressedImageFormats, ImageSampler, ImageType};
+use bevy_render::render_asset::RenderAssetUsages;
 use edges::Edges;
 use raqote::{DrawOptions, DrawTarget, PathBuilder, SolidSource, Source, StrokeStyle};
 // in an actual bevy app, you wouldn't need all this building an Image from scratch logic,
@@ -53,23 +50,23 @@ fn draw_png(image: &Image, img_path: &str) {
 
     let scale = 8;
     let (width, height) = (
-        i32::try_from(image.width()).expect("Image to wide.") * scale,
-        i32::try_from(image.height()).expect("Image to tall.") * scale,
+        i32::try_from(image.width() * scale).expect("Image to wide."),
+        i32::try_from(image.height() * scale).expect("Image to tall."),
     );
 
     // draw the edges to a png
     let mut dt = DrawTarget::new(width, height);
 
-    let objects = edges.multi_image_edges_raw();
+    let objects = edges.multi_image_edge_raw();
 
     for object in objects {
         let mut pb = PathBuilder::new();
         let mut edges_iter = object.into_iter();
 
         if let Some(first_edge) = edges_iter.next() {
-            pb.move_to(first_edge.x * scale as f32, first_edge.y * scale as f32);
+            pb.move_to((first_edge.x * scale) as f32, (first_edge.y * scale) as f32);
             for edge in edges_iter {
-                pb.line_to(edge.x * scale as f32, edge.y * scale as f32);
+                pb.line_to((edge.x * scale) as f32, (edge.y * scale) as f32);
             }
         }
 
@@ -83,7 +80,7 @@ fn draw_png(image: &Image, img_path: &str) {
                 a: 0xff,
             }),
             &StrokeStyle {
-                width: 1.,
+                width: scale as f32,
                 ..StrokeStyle::default()
             },
             &DrawOptions::new(),
