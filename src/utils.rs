@@ -1,5 +1,4 @@
 use crate::UVec2;
-use std::cmp::Ordering::{Equal, Greater, Less};
 
 // Get the bounding box of the polygon
 fn bounding_box(polygon: &[UVec2]) -> Option<(UVec2, UVec2)> {
@@ -71,27 +70,59 @@ pub enum Direction {
     Southwest,
 }
 
+impl Direction {
+    pub fn move_point(&self, point: &mut UVec2) {
+        match self {
+            Direction::North => point.y += 1,
+            Direction::South => point.y -= 1,
+            Direction::East => point.x += 1,
+            Direction::West => point.x -= 1,
+            Direction::Northeast => {
+                point.x += 1;
+                point.y += 1;
+            }
+            Direction::Northwest => {
+                point.x -= 1;
+                point.y += 1;
+            }
+            Direction::Southeast => {
+                point.x += 1;
+                point.y -= 1;
+            }
+            Direction::Southwest => {
+                point.x -= 1;
+                point.y -= 1;
+            }
+        }
+    }
+}
+
 #[allow(clippy::too_many_lines)]
-pub fn handle_neighbors(current: UVec2, last: UVec2, neighbors: u8) -> Direction {
+pub fn handle_neighbors(
+    neighbors: u8,
+    x_ordering: std::cmp::Ordering,
+    y_ordering: std::cmp::Ordering,
+) -> Direction {
+    use std::cmp::Ordering::{Equal, Greater, Less};
     use Direction::{East, North, Northeast, Northwest, South, Southeast, Southwest, West};
     match neighbors {
         0 | 255 => unreachable!(),
-        188..=191 | 127 | 123 | 119 | 115 | 48..=63 => match last.x.cmp(&current.x) {
+        188..=191 | 127 | 123 | 119 | 115 | 48..=63 => match x_ordering {
             Greater => West,
             Equal => unreachable!(),
             Less => East,
         },
-        239 | 238 | 235 | 234 | 223 | 221 | 215 | 213 | 192..=207 => match last.y.cmp(&current.y) {
+        239 | 238 | 235 | 234 | 223 | 221 | 215 | 213 | 192..=207 => match y_ordering {
             Greater => South,
             Equal => unreachable!(),
             Less => North,
         },
-        6 => match last.x.cmp(&current.x) {
+        6 => match x_ordering {
             Greater => Northwest,
             Equal => unreachable!(),
             Less => Southeast,
         },
-        9 => match last.x.cmp(&current.x) {
+        9 => match x_ordering {
             Greater => Southwest,
             Equal => unreachable!(),
             Less => Northeast,
@@ -105,167 +136,165 @@ pub fn handle_neighbors(current: UVec2, last: UVec2, neighbors: u8) -> Direction
         4 => Northwest,
         2 => Southeast,
         1 => Southwest,
-        247 | 245 | 174 | 172 | 170 | 168 | 166 | 164 | 162 | 160 => match last.x.cmp(&current.x) {
+        247 | 245 | 174 | 172 | 170 | 168 | 166 | 164 | 162 | 160 => match x_ordering {
             Greater => North,
             Equal => East,
             Less => unreachable!(),
         },
-        253 | 104..=107 | 97 | 96 => match last.x.cmp(&current.x) {
+        253 | 104..=107 | 97 | 96 => match x_ordering {
             Greater => South,
             Equal => East,
             Less => unreachable!(),
         },
-        251 | 157 | 156 | 153 | 152 | 149 | 148 | 145 | 144 => match last.x.cmp(&current.x) {
+        251 | 157 | 156 | 153 | 152 | 149 | 148 | 145 | 144 => match x_ordering {
             Greater => unreachable!(),
             Equal => West,
             Less => North,
         },
-        254 | 250 | 80..=87 => match last.x.cmp(&current.x) {
+        254 | 250 | 80..=87 => match x_ordering {
             Greater => unreachable!(),
             Equal => West,
             Less => South,
         },
-        180..=182 => match last.x.cmp(&current.x) {
+        180..=182 => match x_ordering {
             Greater => North,
             Equal => unreachable!(),
             Less => East,
         },
-        186 | 184 => match last.x.cmp(&current.x) {
+        186 | 184 => match x_ordering {
             Greater => unreachable!(),
             Equal => West,
             Less => East,
         },
-        231 | 226 => match last.x.cmp(&current.x) {
+        231 | 226 => match x_ordering {
             Greater => North,
             Equal => South,
             Less => unreachable!(),
         },
-        236 | 232 => match last.y.cmp(&current.y) {
+        236 | 232 => match y_ordering {
             Greater => South,
             Equal => unreachable!(),
             Less => East,
         },
-        249 | 248 | 246 | 244 | 240..=242 => {
-            match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
-                (Less, Equal) => South,
-                (Equal, Less) => East,
-                (Greater, Equal) => North,
-                (Equal, Greater) => West,
-                _ => unreachable!(),
-            }
-        }
+        249 | 248 | 246 | 244 | 240..=242 => match (x_ordering, y_ordering) {
+            (Less, Equal) => South,
+            (Equal, Less) => East,
+            (Greater, Equal) => North,
+            (Equal, Greater) => West,
+            _ => unreachable!(),
+        },
 
-        110 | 103 | 102 => match last.x.cmp(&current.x) {
+        110 | 103 | 102 => match x_ordering {
             Greater => Northwest,
             Equal => unreachable!(),
             Less => South,
         },
-        111 | 109 | 108 | 101 | 100 => match last.x.cmp(&current.x) {
+        111 | 109 | 108 | 101 | 100 => match x_ordering {
             Greater => Northwest,
             Equal => East,
             Less => South,
         },
-        46 | 44 | 38 | 36 => match last.x.cmp(&current.x) {
+        46 | 44 | 38 | 36 => match x_ordering {
             Greater => Northwest,
             Equal => unreachable!(),
             Less => East,
         },
-        43 | 41 | 35 | 33 => match last.x.cmp(&current.x) {
+        43 | 41 | 35 | 33 => match x_ordering {
             Greater => Southwest,
             Equal => unreachable!(),
             Less => East,
         },
-        175 | 173 | 171 | 169 | 167 | 165 | 163 | 161 => match last.x.cmp(&current.x) {
+        175 | 173 | 171 | 169 | 167 | 165 | 163 | 161 => match x_ordering {
             Greater => North,
             Equal => Southwest,
             Less => East,
         },
-        142 | 138 | 134 | 130 => match last.x.cmp(&current.x) {
+        142 | 138 | 134 | 130 => match x_ordering {
             Greater => North,
             Equal => Southeast,
             Less => unreachable!(),
         },
-        95 | 93 | 91 | 89 => match last.x.cmp(&current.x) {
+        95 | 93 | 91 | 89 => match x_ordering {
             Greater => West,
             Equal => Northeast,
             Less => unreachable!(),
         },
-        141 | 137 | 133 | 129 => match last.x.cmp(&current.x) {
+        141 | 137 | 133 | 129 => match x_ordering {
             Greater => unreachable!(),
             Equal => Southwest,
             Less => North,
         },
-        94 | 92 | 90 | 88 => match last.x.cmp(&current.x) {
+        94 | 92 | 90 | 88 => match x_ordering {
             Greater => West,
             Equal => Northeast,
             Less => South,
         },
-        23 | 22 | 19 | 18 => match last.x.cmp(&current.x) {
+        23 | 22 | 19 | 18 => match x_ordering {
             Greater => West,
             Equal => unreachable!(),
             Less => Southeast,
         },
-        159 | 158 | 155 | 154 | 151 | 150 | 147 | 146 => match last.x.cmp(&current.x) {
+        159 | 158 | 155 | 154 | 151 | 150 | 147 | 146 => match x_ordering {
             Greater => North,
             Equal => West,
             Less => Southeast,
         },
-        29 | 28 | 25 | 24 => match last.x.cmp(&current.x) {
+        29 | 28 | 25 | 24 => match x_ordering {
             Greater => West,
             Equal => unreachable!(),
             Less => Northeast,
         },
-        72..=75 => match last.x.cmp(&current.x) {
+        72..=75 => match x_ordering {
             Greater => South,
             Equal => Northeast,
             Less => unreachable!(),
         },
-        68..=71 => match last.x.cmp(&current.x) {
+        68..=71 => match x_ordering {
             Greater => unreachable!(),
             Equal => Northwest,
             Less => South,
         },
 
-        31 | 30 | 27 | 26 => match last.y.cmp(&current.y) {
+        31 | 30 | 27 | 26 => match y_ordering {
             Greater => West,
             Equal => Southeast,
             Less => Northeast,
         },
-        76..=79 => match last.x.cmp(&current.x) {
+        76..=79 => match x_ordering {
             Greater => Northwest,
             Equal => Northeast,
             Less => South,
         },
-        47 | 45 | 39 | 37 => match last.y.cmp(&current.y) {
+        47 | 45 | 39 | 37 => match y_ordering {
             Greater => Southwest,
             Equal => Northwest,
             Less => East,
         },
-        143 | 139 | 135 | 131 => match last.x.cmp(&current.x) {
+        143 | 139 | 135 | 131 => match x_ordering {
             Greater => North,
             Equal => Southwest,
             Less => Southeast,
         },
-        10 => match last.y.cmp(&current.y) {
+        10 => match y_ordering {
             Greater | Equal => Southeast,
             Less => Northeast,
         },
-        12 => match last.x.cmp(&current.x) {
+        12 => match x_ordering {
             Greater => Northwest,
             Equal => unreachable!(),
             Less => Northeast,
         },
-        3 => match last.x.cmp(&current.x) {
+        3 => match x_ordering {
             Greater => Southwest,
             Equal => unreachable!(),
             Less => Southeast,
         },
-        5 => match last.x.cmp(&current.x) {
+        5 => match x_ordering {
             Greater => Southwest,
             Equal => unreachable!(),
             Less => Northwest,
         },
-        15 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+        15 => match (x_ordering, y_ordering) {
             (Greater, Less) => Northeast,
             (Greater, Greater) => Northwest,
             (Less, Less) => Southeast,
@@ -273,39 +302,39 @@ pub fn handle_neighbors(current: UVec2, last: UVec2, neighbors: u8) -> Direction
             _ => unreachable!(),
         },
 
-        252 | 124..=126 | 120..=122 | 116..=118 | 112..=114 => match last.x.cmp(&current.x) {
+        252 | 124..=126 | 120..=122 | 116..=118 | 112..=114 => match x_ordering {
             Greater => West,
             Equal => East,
             Less => South,
         },
-        243 | 187 | 185 | 183 | 176..=179 => match last.x.cmp(&current.x) {
+        243 | 187 | 185 | 183 | 176..=179 => match x_ordering {
             Greater => North,
             Equal => West,
             Less => East,
         },
-        222 | 216..=220 | 214 | 208..=212 => match last.y.cmp(&current.y) {
+        222 | 216..=220 | 214 | 208..=212 => match y_ordering {
             Greater => West,
             Equal => South,
             Less => North,
         },
-        237 | 233 | 227..=230 | 225 | 224 => match last.y.cmp(&current.y) {
+        237 | 233 | 227..=230 | 225 | 224 => match y_ordering {
             Greater => South,
             Equal => North,
             Less => East,
         },
-        7 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+        7 => match (x_ordering, y_ordering) {
             (Greater, Less) => Northwest,
             (Less, Less) => Southeast,
             (Less, Greater) => Southwest,
             _ => unreachable!(),
         },
-        14 | 11 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+        14 | 11 => match (x_ordering, y_ordering) {
             (Greater, Less) => Northeast,
             (Less, Less) => Southeast,
             (Greater, Greater) => Southwest,
             _ => unreachable!(),
         },
-        13 => match (last.x.cmp(&current.x), last.y.cmp(&current.y)) {
+        13 => match (x_ordering, y_ordering) {
             (Less, Greater) => Northeast,
             (Less, Less) => Southeast,
             (Greater, Greater) => Southwest,

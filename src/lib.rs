@@ -7,7 +7,7 @@ pub use bevy_math::prelude::{UVec2, Vec2};
 pub use glam::{UVec2, Vec2};
 use rayon::prelude::*;
 use std::fmt;
-use utils::{handle_neighbors, in_polygon, Direction};
+use utils::{handle_neighbors, in_polygon};
 
 mod bin_image;
 #[cfg(feature = "bevy")]
@@ -79,69 +79,47 @@ impl Edges {
     /// the points you get back to either side of (0, 0) instead of everything in positive x and y.
     #[must_use]
     pub fn image_edges(&self) -> Vec<Vec<UVec2>> {
-        let image = &self.image;
-        // Marching squares adjacent, walks all the pixels in the provided data and keeps track of
-        // any that have at least one transparent / zero value neighbor then, while sorting into drawing
-        // order, groups them into sets of connected pixels
-        let corners: Vec<_> = (0..image.height() * image.width())
-            .into_par_iter()
-            .map(|i| UVec2::new(i / image.height(), i % image.height()))
-            .filter(|p| image.is_corner(*p))
-            .collect();
-
-        self.collect_objects(&corners)
-    }
-
-    fn collect_objects(&self, corners: &[UVec2]) -> Vec<Vec<UVec2>> {
-        if corners.is_empty() {
-            return Vec::new();
-        }
-
+        let corners: Vec<UVec2> = self.collect_corners();
         let mut objects: Vec<Vec<UVec2>> = Vec::new();
-
+        if corners.is_empty() {
+            return objects;
+        }
         while let Some(start) = corners.iter().find(|point| {
             objects
                 .par_iter()
                 .all(|object| !(object.contains(point) || in_polygon(**point, object)))
         }) {
-            let mut current = *start;
-            let mut group: Vec<UVec2> = Vec::new();
-            group.push(current);
-            let object = loop {
-                let (last, neighbors) = (*group.last().unwrap(), self.image.get_neighbors(current));
-                if last != current {
-                    group.push(current);
-                }
-                match handle_neighbors(current, last, neighbors) {
-                    Direction::North => current.y += 1,
-                    Direction::South => current.y -= 1,
-                    Direction::East => current.x += 1,
-                    Direction::West => current.x -= 1,
-                    Direction::Northeast => {
-                        current.x += 1;
-                        current.y += 1;
-                    }
-                    Direction::Northwest => {
-                        current.x -= 1;
-                        current.y += 1;
-                    }
-                    Direction::Southeast => {
-                        current.x += 1;
-                        current.y -= 1;
-                    }
-                    Direction::Southwest => {
-                        current.x -= 1;
-                        current.y -= 1;
-                    }
-                }
-                if current == *start {
-                    break group;
-                }
-            };
-            objects.push(object);
+            objects.push(self.collect_object(*start));
         }
-
         objects
+    }
+
+    fn collect_corners(&self) -> Vec<UVec2> {
+        let image = &self.image;
+        (0..image.height() * image.width())
+            .into_par_iter()
+            .map(|i| UVec2::new(i / image.height(), i % image.height()))
+            .filter(|p| image.is_corner(*p))
+            .collect()
+    }
+
+    fn collect_object(&self, start: UVec2) -> Vec<UVec2> {
+        let mut object_edges: Vec<UVec2> = vec![start];
+        let mut current = start;
+        loop {
+            let (last, neighbors) = (
+                *object_edges.last().unwrap(),
+                self.image.get_neighbors(current),
+            );
+            if last != current {
+                object_edges.push(current);
+            }
+            handle_neighbors(neighbors, last.x.cmp(&current.x), last.y.cmp(&current.y))
+                .move_point(&mut current);
+            if current == start {
+                break object_edges;
+            }
+        }
     }
 
     /// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
