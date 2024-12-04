@@ -14,6 +14,9 @@ repository = "https://github.com/shnewto/edges"
 
 license = "MIT OR Apache-2.0"
 
+exclude = ["assets/*", ".github/*", "examples/*"]
+include = ["/LICENSE-APACHE", "/LICENSE-MIT", "/README.md", "/src/"]
+
 [lints.clippy]
 cast_precision_loss = { level = "allow", priority = 1 }
 pedantic = { level = "warn", priority = 0 }
@@ -25,7 +28,7 @@ bevy = ["dep:bevy_math", "dep:bevy_image"]
 
 [dependencies]
 image = "0.25"
-rayon = "1.10.0"
+rayon = "1"
 
 [dependencies.glam]
 version = "0.29"
