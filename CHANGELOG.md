@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1](https://github.com/shnewto/edges/compare/0.5.0...0.5.1) - 2024-12-04
+
+### Added
+
+- `CHANGELOG.md`, `REALESE.md` Files
+  ([27c0309](https://github.com/shnewto/edges/commit/27c0309de7cf4cf1d9bb3939eebd2b073a3bb81e))
+  ([88444d1](https://github.com/shnewto/edges/commit/88444d1ef60a61c1fcfb8c30cba919353de8010b)).
+
+### Changed
+
+- Refactored inner logic without changes in API
+  ([ffadade](https://github.com/shnewto/edges/commit/ffadade2004535a2fb0930412f4b95586b0f8383)).
+- Updated docs ([dbdbca7](https://github.com/shnewto/edges/commit/dbdbca79871fcb6928344860eb5586617e0beacd)).
+
 ## [0.5.0](https://github.com/shnewto/edges/compare/0.4.0...0.5.0) - 2024-12-04
 
 ### Added
