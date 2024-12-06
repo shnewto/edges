@@ -67,6 +67,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [`bevy_math`](https://crates.io/crates/bevy_math) and [`bevy_render`](https://crates.io/crates/bevy_render)
   ([e7ab40a](https://github.com/shnewto/edges/commit/e7ab40a25e933bce24380bc090dea503b0bc93d4)).
 
+### Fixed
+
+- Collecting of inner edges (#3)
+  ([60cb046]) ([c4ca604]) ([06012b7]) ([ac0c3dd]) ([8d38555]).
+
 ### Removed
 
 - Crates from dependencies
@@ -107,6 +112,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Reworked the algorithm for sorting points in drawing order ([c508c2a](https://github.com/shnewto/edges/commit/c508c2a6816593efbeaf807e5af1e06c9f165376)).
+
+### Fixed
+
+- Incorrect drawing order for complex images (#1)
+  ([c508c2a](https://github.com/shnewto/edges/commit/c508c2a6816593efbeaf807e5af1e06c9f165376)).
 
 ## [0.3.1](https://github.com/shnewto/edges/compare/0.3.0...0.3.1) - 2024-03-05
 
