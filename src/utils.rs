@@ -1,7 +1,7 @@
 use crate::UVec2;
 
 // Get the bounding box of the polygon
-fn bounding_box(polygon: &[UVec2]) -> Option<(UVec2, UVec2)> {
+pub fn bounding_box(polygon: &[UVec2]) -> Option<(UVec2, UVec2)> {
     polygon
         .iter()
         .copied()
@@ -32,30 +32,6 @@ pub fn in_polygon(point: UVec2, polygon: &[UVec2]) -> bool {
         }
     }
     is_inside
-}
-
-pub fn is_corner(neighbors: u8) -> bool {
-    !matches!(
-        neighbors,
-        255
-            | 239
-            | 238
-            | 235
-            | 234
-            | 223
-            | 221
-            | 215
-            | 213
-            | 188..=207
-            | 127
-            | 123
-            | 119
-            | 115
-            | 48..=63
-            | 9
-            | 6
-            | 0
-    )
 }
 
 pub enum Direction {
