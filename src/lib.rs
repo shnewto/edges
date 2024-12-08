@@ -2,7 +2,7 @@
 
 #[cfg(feature = "bevy")]
 pub use bevy_math::prelude::{UVec2, Vec2};
-use binary_image::{BinaryImage, BinaryRawView, BinaryView, Bit, Neighbors};
+use binary_image::{BinaryImage, BinaryView, Bit, Neighbors};
 #[cfg(all(not(feature = "bevy"), feature = "glam-latest"))]
 pub use glam::{UVec2, Vec2};
 use image::{DynamicImage, GenericImageView};
@@ -146,10 +146,10 @@ impl From<bevy_image::prelude::Image> for Edges<BinaryImage> {
 }
 
 #[cfg(feature = "bevy")]
-impl<'a> From<&'a bevy_image::prelude::Image> for Edges<BinaryRawView<'a, u8>> {
-    fn from(image: &'a bevy_image::prelude::Image) -> Edges<BinaryRawView<'a, u8>> {
+impl From<&bevy_image::prelude::Image> for Edges<BinaryImage> {
+    fn from(image: &bevy_image::prelude::Image) -> Edges<BinaryImage> {
         Self {
-            image: BinaryRawView::new(image.height(), image.width(), &image.data),
+            image: BinaryImage::from_raw(image.height(), image.width(), &image.data),
         }
     }
 }
