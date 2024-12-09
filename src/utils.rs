@@ -1,3 +1,5 @@
+use rayon::prelude::*;
+
 use crate::UVec2;
 
 // Get the bounding box of the polygon
@@ -34,6 +36,7 @@ pub fn in_polygon(point: UVec2, polygon: &[UVec2]) -> bool {
     is_inside
 }
 
+#[derive(Debug)]
 pub enum Direction {
     North,
     South,
@@ -47,28 +50,43 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn move_point(&self, point: &mut UVec2) {
+    pub fn find_next(&self, current: UVec2, points: &[UVec2]) -> Option<UVec2> {
+        let iter = points.par_iter().copied();
         match self {
-            Direction::North => point.y += 1,
-            Direction::South => point.y -= 1,
-            Direction::East => point.x += 1,
-            Direction::West => point.x -= 1,
-            Direction::Northeast => {
-                point.x += 1;
-                point.y += 1;
-            }
-            Direction::Northwest => {
-                point.x -= 1;
-                point.y += 1;
-            }
-            Direction::Southeast => {
-                point.x += 1;
-                point.y -= 1;
-            }
-            Direction::Southwest => {
-                point.x -= 1;
-                point.y -= 1;
-            }
+            Direction::North => iter
+                .filter(|p| p.x == current.x && p.y > current.y)
+                .min_by_key(|p| p.y),
+            Direction::South => iter
+                .filter(|p| p.x == current.x && p.y < current.y)
+                .max_by_key(|p| p.y),
+            Direction::East => iter
+                .filter(|p| p.y == current.y && p.x > current.x)
+                .min_by_key(|p| p.x),
+            Direction::West => iter
+                .filter(|p| p.y == current.y && p.x < current.x)
+                .max_by_key(|p| p.x),
+            Direction::Northeast => iter
+                .filter(|p| {
+                    p.cmpgt(current).all() && p.y.abs_diff(current.y) == p.x.abs_diff(current.x)
+                })
+                .min_by_key(|p| p.y),
+            Direction::Northwest => iter
+                .filter(|p| {
+                    (p.x < current.x && p.y > current.y)
+                        && p.y.abs_diff(current.y) == p.x.abs_diff(current.x)
+                })
+                .min_by_key(|p| p.y),
+            Direction::Southeast => iter
+                .filter(|p| {
+                    (p.x > current.x && p.y < current.y)
+                        && p.y.abs_diff(current.y) == p.x.abs_diff(current.x)
+                })
+                .max_by_key(|p| p.y),
+            Direction::Southwest => iter
+                .filter(|p| {
+                    p.cmplt(current).all() && p.y.abs_diff(current.y) == p.x.abs_diff(current.x)
+                })
+                .max_by_key(|p| p.y),
         }
     }
 }

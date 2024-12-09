@@ -8,7 +8,7 @@ pub use glam::{UVec2, Vec2};
 use image::{DynamicImage, GenericImageView};
 use rayon::prelude::*;
 use std::fmt;
-use utils::{bounding_box, handle_neighbors, in_polygon};
+use utils::{bounding_box, handle_neighbors};
 
 #[cfg(feature = "bevy")]
 #[cfg(test)]
@@ -39,8 +39,8 @@ where
     /// A vector of `Vec2` representing the translated edge points.
     #[inline]
     #[must_use]
-    pub fn single_image_edge_translated(&self) -> Vec<Vec2> {
-        translate(self.single_image_edge_raw())
+    pub fn single_image_edge_translated(&self) -> Option<Vec<Vec2>> {
+        self.single_image_edge_raw().map(translate)
     }
 
     /// Retrieves the raw edge points of a single image.
@@ -50,8 +50,9 @@ where
     /// A vector of `UVec2` representing the raw edge points.
     #[inline]
     #[must_use]
-    pub fn single_image_edge_raw(&self) -> Vec<UVec2> {
-        self.image_edges().into_par_iter().flatten().collect()
+    pub fn single_image_edge_raw(&self) -> Option<Vec<UVec2>> {
+        let mut corners: Vec<UVec2> = self.collect_corners();
+        self.collect_object(&mut corners)
     }
 
     /// Translates the edges of multiple images into a coordinate system centered at (0, 0).
@@ -80,17 +81,13 @@ where
     /// the points you get back to either side of (0, 0) instead of everything in positive x and y.
     #[must_use]
     pub fn image_edges(&self) -> Vec<Vec<UVec2>> {
-        let corners: Vec<UVec2> = self.collect_corners();
+        let mut corners: Vec<UVec2> = self.collect_corners();
         let mut objects: Vec<Vec<UVec2>> = Vec::new();
         if corners.is_empty() {
             return objects;
         }
-        while let Some(start) = corners.iter().find(|point| {
-            objects
-                .par_iter()
-                .all(|object| !(object.contains(point) || in_polygon(**point, object)))
-        }) {
-            objects.push(self.collect_object(*start));
+        while let Some(object) = self.collect_object(&mut corners) {
+            objects.push(object);
         }
         objects
     }
@@ -100,29 +97,40 @@ where
             .flat_map(|x| (0..self.image.height()).map(move |y| (x, y)))
             .filter(|&(x, y)| Neighbors::is_corner(&self.image, x, y))
             .map(|(x, y)| UVec2::new(x, y))
+            .rev()
             .collect()
     }
 
-    fn collect_object(&self, start: UVec2) -> Vec<UVec2> {
-        let mut object_edges: Vec<UVec2> = vec![start];
-        let mut current = start;
-        loop {
-            let (last, neighbors) = (
-                *object_edges.last().unwrap(),
-                Neighbors::get_neighbors(&self.image, current.x, current.y),
-            );
-            if last != current {
-                object_edges.push(current);
-            }
-            handle_neighbors(
-                neighbors.bits(),
-                last.x.cmp(&current.x),
-                last.y.cmp(&current.y),
-            )
-            .move_point(&mut current);
-            if current == start {
-                break object_edges;
-            }
+    fn collect_object(&self, corners: &mut Vec<UVec2>) -> Option<Vec<UVec2>> {
+        if let Some(start) = corners.pop() {
+            let mut current = start;
+            let mut last = start;
+            let mut object: Vec<UVec2> = vec![start];
+            Some(loop {
+                let neighbors = Neighbors::get_neighbors(&self.image, current.x, current.y);
+                let dir = handle_neighbors(
+                    neighbors.bits(),
+                    last.x.cmp(&current.x),
+                    last.y.cmp(&current.y),
+                );
+                let Some(next) = dir.find_next(current, corners) else {
+                    todo!("\n{dir:?}\n{neighbors:b} {current}")
+                };
+                last = current;
+                current = next;
+
+                if current == start {
+                    *corners = corners
+                        .par_iter()
+                        .copied()
+                        .filter(|p| !(object.contains(p) && utils::in_polygon(*p, &object)))
+                        .collect();
+                    break object;
+                }
+                object.push(current);
+            })
+        } else {
+            None
         }
     }
 }
