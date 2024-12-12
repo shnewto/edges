@@ -12,7 +12,8 @@ use rayon::prelude::*;
 use utils::{bounding_box, handle_neighbors, in_polygon};
 
 #[cfg(feature = "bevy")]
-#[cfg(test)]
+mod bevy;
+#[cfg(all(feature = "bevy", test))]
 mod tests;
 mod utils;
 
@@ -137,28 +138,10 @@ where
     }
 }
 
-#[cfg(feature = "bevy")]
-impl From<bevy_image::prelude::Image> for Edges<BinaryImage> {
-    fn from(image: bevy_image::prelude::Image) -> Edges<BinaryImage> {
-        Self {
-            image: BinaryImage::from_raw(image.height(), image.width(), &image.data),
-        }
-    }
-}
-
-#[cfg(feature = "bevy")]
-impl From<&bevy_image::prelude::Image> for Edges<BinaryImage> {
-    fn from(image: &bevy_image::prelude::Image) -> Edges<BinaryImage> {
-        Self {
-            image: BinaryImage::from_raw(image.height(), image.width(), &image.data),
-        }
-    }
-}
-
 impl From<image::DynamicImage> for Edges<BinaryImage> {
     fn from(image: image::DynamicImage) -> Edges<BinaryImage> {
         Self {
-            image: BinaryImage::from(&BinaryView(&image)),
+            image: BinaryImage::from(image),
         }
     }
 }
@@ -166,7 +149,7 @@ impl From<image::DynamicImage> for Edges<BinaryImage> {
 impl<'a> From<&'a image::DynamicImage> for Edges<BinaryView<'a, DynamicImage>> {
     fn from(image: &'a image::DynamicImage) -> Edges<BinaryView<'a, DynamicImage>> {
         Self {
-            image: BinaryView(image),
+            image: BinaryView::Ref(image),
         }
     }
 }

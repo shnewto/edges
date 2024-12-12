@@ -46,7 +46,7 @@ fn main() {
 
 fn draw_png(image: &Image, img_path: &str) {
     // get the image's edges
-    let edges = Edges::from(image);
+    let edges = Edges::try_from(image).unwrap();
 
     let scale = 8;
     let (width, height) = (
