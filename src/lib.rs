@@ -7,7 +7,7 @@ use binary_image::{BinaryImage, BinaryView, Bit, Neighbors};
 pub use glam::{UVec2, Vec2};
 use image::{DynamicImage, GenericImageView};
 use rayon::prelude::*;
-use std::fmt;
+
 use utils::{bounding_box, handle_neighbors, in_polygon};
 
 #[cfg(feature = "bevy")]
@@ -170,7 +170,7 @@ impl<'a> From<&'a image::DynamicImage> for Edges<BinaryView<'a, DynamicImage>> {
     }
 }
 
-impl<I> fmt::Debug for Edges<I>
+impl<I> std::fmt::Debug for Edges<I>
 where
     I: GenericImageView<Pixel = Bit>,
 {
