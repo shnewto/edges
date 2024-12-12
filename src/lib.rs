@@ -5,35 +5,27 @@ pub(crate) use bevy_math::prelude::{UVec2, Vec2};
 #[cfg(all(not(feature = "bevy"), feature = "glam-latest"))]
 pub(crate) use glam::{UVec2, Vec2};
 
-use binary_image::{BinaryImage, BinaryView, Bit, Neighbors};
+use binary_image::{BinaryImage, BinaryView, Bit};
 use image::{DynamicImage, GenericImageView};
-use rayon::prelude::*;
 
-use utils::{bounding_box, handle_neighbors, in_polygon};
+pub use iter::Edges as Iter;
+pub use utils::{translate, translate_objects};
 
 #[cfg(feature = "bevy")]
 mod bevy;
+mod iter;
 #[cfg(all(feature = "bevy", test))]
 mod tests;
 mod utils;
 
 /// A struct representing the edges of a image.
-#[derive(Clone)]
-pub struct Edges<I>
-where
-    I: GenericImageView<Pixel = Bit>,
-{
-    pub image: I,
-}
+#[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Edges<I: GenericImageView<Pixel = Bit>>(pub I);
 
 impl<I> Edges<I>
 where
     I: GenericImageView<Pixel = Bit>,
 {
-    pub fn new(image: I) -> Self {
-        Self { image }
-    }
-
     /// Translates the edges of a single image into a coordinate system centered at (0, 0).
     ///
     /// # Returns
@@ -41,8 +33,9 @@ where
     /// A vector of `Vec2` representing the translated edge points.
     #[inline]
     #[must_use]
-    pub fn single_image_edge_translated(&self) -> Vec<Vec2> {
-        translate(self.single_image_edge_raw())
+    pub fn single_image_edge_translated(&self) -> Option<Vec<Vec2>> {
+        self.single_image_edge_raw()
+            .map(|polygon| translate(polygon, self.0.width(), self.0.height()))
     }
 
     /// Retrieves the raw edge points of a single image.
@@ -52,8 +45,8 @@ where
     /// A vector of `UVec2` representing the raw edge points.
     #[inline]
     #[must_use]
-    pub fn single_image_edge_raw(&self) -> Vec<UVec2> {
-        self.image_edges().into_par_iter().flatten().collect()
+    pub fn single_image_edge_raw(&self) -> Option<Vec<UVec2>> {
+        self.iter().next()
     }
 
     /// Translates the edges of multiple images into a coordinate system centered at (0, 0).
@@ -64,7 +57,7 @@ where
     #[inline]
     #[must_use]
     pub fn multi_image_edge_translated(&self) -> Vec<Vec<Vec2>> {
-        translate_objects(self.multi_image_edge_raw())
+        translate_objects(self.multi_image_edge_raw(), self.0.width(), self.0.height())
     }
 
     /// Retrieves the raw edge points of multiple images.
@@ -75,57 +68,13 @@ where
     #[inline]
     #[must_use]
     pub fn multi_image_edge_raw(&self) -> Vec<Vec<UVec2>> {
-        self.image_edges()
+        self.iter().collect()
     }
 
-    /// Takes `Edges` and a boolean to indicate whether to translate
-    /// the points you get back to either side of (0, 0) instead of everything in positive x and y.
+    #[inline]
     #[must_use]
-    pub fn image_edges(&self) -> Vec<Vec<UVec2>> {
-        let corners: Vec<UVec2> = self.collect_corners();
-        let mut objects: Vec<Vec<UVec2>> = Vec::new();
-        if corners.is_empty() {
-            return objects;
-        }
-        while let Some(start) = corners.iter().find(|point| {
-            objects
-                .par_iter()
-                .all(|object| !(object.contains(point) || in_polygon(**point, object)))
-        }) {
-            objects.push(self.collect_object(*start));
-        }
-        objects
-    }
-
-    fn collect_corners(&self) -> Vec<UVec2> {
-        (0..self.image.width())
-            .flat_map(|x| (0..self.image.height()).map(move |y| (x, y)))
-            .filter(|&(x, y)| Neighbors::is_corner(&self.image, x, y))
-            .map(|(x, y)| UVec2::new(x, y))
-            .collect()
-    }
-
-    fn collect_object(&self, start: UVec2) -> Vec<UVec2> {
-        let mut object_edges: Vec<UVec2> = vec![start];
-        let mut current = start;
-        loop {
-            let (last, neighbors) = (
-                *object_edges.last().unwrap(),
-                Neighbors::get_neighbors(&self.image, current.x, current.y),
-            );
-            if last != current {
-                object_edges.push(current);
-            }
-            handle_neighbors(
-                neighbors.bits(),
-                last.x.cmp(&current.x),
-                last.y.cmp(&current.y),
-            )
-            .move_point(&mut current);
-            if current == start {
-                break object_edges;
-            }
-        }
+    pub fn iter(&self) -> iter::Edges<I> {
+        self.into_iter()
     }
 }
 
@@ -134,23 +83,19 @@ where
     I: GenericImageView<Pixel = Bit>,
 {
     fn from(value: Edges<I>) -> Vec<Vec<UVec2>> {
-        value.image_edges()
+        value.multi_image_edge_raw()
     }
 }
 
-impl From<image::DynamicImage> for Edges<BinaryImage> {
-    fn from(image: image::DynamicImage) -> Edges<BinaryImage> {
-        Self {
-            image: BinaryImage::from(image),
-        }
+impl From<DynamicImage> for Edges<BinaryImage> {
+    fn from(image: DynamicImage) -> Edges<BinaryImage> {
+        Self(BinaryImage::from(image))
     }
 }
 
-impl<'a> From<&'a image::DynamicImage> for Edges<BinaryView<'a, DynamicImage>> {
-    fn from(image: &'a image::DynamicImage) -> Edges<BinaryView<'a, DynamicImage>> {
-        Self {
-            image: BinaryView::Ref(image),
-        }
+impl<'a> From<&'a DynamicImage> for Edges<BinaryView<'a, DynamicImage>> {
+    fn from(image: &'a DynamicImage) -> Edges<BinaryView<'a, DynamicImage>> {
+        Self(BinaryView::Ref(image))
     }
 }
 
@@ -166,31 +111,13 @@ where
     }
 }
 
-/// Translates an `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
-///
-/// # Returns
-///
-/// A vector of `Vec2` representing the translated coordinates.
-#[inline]
-#[must_use]
-pub fn translate(polygon: Vec<UVec2>) -> Vec<Vec2> {
-    let Some((min, max)) = bounding_box(&polygon) else {
-        return Vec::new();
-    };
-    let size = ((max - min) / 2).as_vec2();
-    polygon
-        .into_par_iter()
-        .map(|p| p.as_vec2() - size)
-        .collect()
-}
-
-/// Translates an `Vec` of `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
-///
-/// # Returns
-///
-/// A vector of vector of `Vec2` representing the translated objects.
-#[inline]
-#[must_use]
-pub fn translate_objects(polygons: Vec<Vec<UVec2>>) -> Vec<Vec<Vec2>> {
-    polygons.into_par_iter().map(translate).collect()
+impl<'a, I> IntoIterator for &'a Edges<I>
+where
+    I: GenericImageView<Pixel = Bit>,
+{
+    type Item = Vec<UVec2>;
+    type IntoIter = iter::Edges<'a, I>;
+    fn into_iter(self) -> Self::IntoIter {
+        Self::IntoIter::new(&self.0)
+    }
 }

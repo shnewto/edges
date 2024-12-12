@@ -17,7 +17,7 @@ fn same_image_same_edges() {
         RenderAssetUsages::default(),
     )
     .unwrap();
-    let bevy_edges = Edges::from(bevy_image);
+    let bevy_edges = Edges::try_from(bevy_image).unwrap();
 
     assert_eq!(
         dynamic_edges.single_image_edge_raw(),
@@ -43,7 +43,7 @@ fn same_images_same_edges() {
         RenderAssetUsages::default(),
     )
     .unwrap();
-    let bevy_edges = Edges::from(bevy_image);
+    let bevy_edges = Edges::try_from(bevy_image).unwrap();
 
     assert_eq!(
         dynamic_edges.multi_image_edge_raw(),
