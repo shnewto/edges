@@ -1,10 +1,11 @@
 #![doc = include_str!("../README.md")]
 
 #[cfg(feature = "bevy")]
-pub use bevy_math::prelude::{UVec2, Vec2};
-use binary_image::{BinaryImage, BinaryView, Bit, Neighbors};
+pub(crate) use bevy_math::prelude::{UVec2, Vec2};
 #[cfg(all(not(feature = "bevy"), feature = "glam-latest"))]
-pub use glam::{UVec2, Vec2};
+pub(crate) use glam::{UVec2, Vec2};
+
+use binary_image::{BinaryImage, BinaryView, Bit, Neighbors};
 use image::{DynamicImage, GenericImageView};
 use rayon::prelude::*;
 
