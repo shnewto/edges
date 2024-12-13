@@ -35,7 +35,7 @@ where
     #[must_use]
     pub fn single_translated(&self) -> Option<Vec<Vec2>> {
         self.single_raw()
-            .map(|polygon| translate(polygon, self.0.width(), self.0.height()))
+            .map(|polygon| translate(polygon, self.width(), self.height()))
     }
 
     /// Retrieves the raw edge points of a single image.
@@ -57,7 +57,7 @@ where
     #[inline]
     #[must_use]
     pub fn multi_translated(&self) -> Vec<Vec<Vec2>> {
-        translate_objects(self.iter(), self.0.width(), self.0.height())
+        translate_objects(self.iter(), self.width(), self.height())
     }
 
     /// Retrieves the raw edge points of multiple images.
@@ -108,6 +108,16 @@ where
             .field("raw", &self.multi_raw())
             .field("translated", &self.multi_translated())
             .finish()
+    }
+}
+
+impl<I> std::ops::Deref for Edges<I>
+where
+    I: GenericImageView<Pixel = Bit>,
+{
+    type Target = I;
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
