@@ -57,7 +57,7 @@ where
     #[inline]
     #[must_use]
     pub fn multi_translated(&self) -> Vec<Vec<Vec2>> {
-        translate_objects(self.multi_raw(), self.0.width(), self.0.height())
+        translate_objects(self.iter(), self.0.width(), self.0.height())
     }
 
     /// Retrieves the raw edge points of multiple images.

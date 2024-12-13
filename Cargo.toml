@@ -22,18 +22,17 @@ cast_precision_loss = { level = "allow", priority = 1 }
 pedantic = { level = "warn", priority = 0 }
 
 [features]
-default = ["bevy"]
+default = ["bevy", "parallel"]
 glam-latest = ["dep:glam"]
 bevy = ["dep:bevy_math", "dep:bevy_image", "binary_image/bevy"]
+parallel = ["dep:rayon"]
+
 
 [dependencies]
-image = "0.25"
-rayon = "1"
 binary_image = "0.5"
-
-[dependencies.glam]
-version = "0.29"
-optional = true
+image = { version = "0.25", default-features = false }
+rayon = { version = "1", optional = true }
+glam = { version = "0.29", optional = true }
 
 [dependencies.bevy_math]
 version = "0.15"

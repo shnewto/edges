@@ -2,6 +2,7 @@ use crate::{UVec2, Vec2};
 
 use binary_image::{Bit, Neighbors};
 use image::GenericImageView;
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 // Get the bounding box of the polygon
@@ -57,15 +58,17 @@ where
 #[inline]
 #[must_use]
 pub fn translate(polygon: Vec<UVec2>, width: u32, height: u32) -> Vec<Vec2> {
-    polygon
-        .into_par_iter()
-        .map(|p| {
-            Vec2::new(
-                p.x as f32 - (width / 2) as f32,
-                (height / 2) as f32 - p.y as f32,
-            )
-        })
-        .collect()
+    #[cfg(feature = "parallel")]
+    let iter = polygon.into_par_iter();
+    #[cfg(not(feature = "parallel"))]
+    let iter = polygon.into_iter();
+    iter.map(|p| {
+        Vec2::new(
+            p.x as f32 - (width / 2) as f32,
+            (height / 2) as f32 - p.y as f32,
+        )
+    })
+    .collect()
 }
 
 /// Translates an `Vec` of `Vec` of points in positive (x, y) coordinates to a coordinate system centered at (0, 0).
@@ -75,9 +78,12 @@ pub fn translate(polygon: Vec<UVec2>, width: u32, height: u32) -> Vec<Vec2> {
 /// A vector of vector of `Vec2` representing the translated objects.
 #[inline]
 #[must_use]
-pub fn translate_objects(polygons: Vec<Vec<UVec2>>, width: u32, height: u32) -> Vec<Vec<Vec2>> {
+pub fn translate_objects(
+    polygons: impl Iterator<Item = Vec<UVec2>>,
+    width: u32,
+    height: u32,
+) -> Vec<Vec<Vec2>> {
     polygons
-        .into_par_iter()
         .map(|polygon| translate(polygon, width, height))
         .collect()
 }

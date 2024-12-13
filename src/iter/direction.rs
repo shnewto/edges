@@ -1,4 +1,5 @@
 use binary_image::Neighbors;
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 use crate::UVec2;
@@ -19,6 +20,9 @@ pub enum Direction {
 
 impl Direction {
     pub fn find_by_direction(self, current: UVec2, points: &[UVec2]) -> Option<UVec2> {
+        #[cfg(not(feature = "parallel"))]
+        let iter = points.iter();
+        #[cfg(feature = "parallel")]
         let iter = points.par_iter();
         match self {
             Direction::North => iter
