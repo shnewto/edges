@@ -33,8 +33,8 @@ where
     /// A vector of `Vec2` representing the translated edge points.
     #[inline]
     #[must_use]
-    pub fn single_image_edge_translated(&self) -> Option<Vec<Vec2>> {
-        self.single_image_edge_raw()
+    pub fn single_translated(&self) -> Option<Vec<Vec2>> {
+        self.single_raw()
             .map(|polygon| translate(polygon, self.0.width(), self.0.height()))
     }
 
@@ -45,7 +45,7 @@ where
     /// A vector of `UVec2` representing the raw edge points.
     #[inline]
     #[must_use]
-    pub fn single_image_edge_raw(&self) -> Option<Vec<UVec2>> {
+    pub fn single_raw(&self) -> Option<Vec<UVec2>> {
         self.iter().next()
     }
 
@@ -56,8 +56,8 @@ where
     /// A vector of vectors of `Vec2` representing the translated edge points of each image.
     #[inline]
     #[must_use]
-    pub fn multi_image_edge_translated(&self) -> Vec<Vec<Vec2>> {
-        translate_objects(self.multi_image_edge_raw(), self.0.width(), self.0.height())
+    pub fn multi_translated(&self) -> Vec<Vec<Vec2>> {
+        translate_objects(self.multi_raw(), self.0.width(), self.0.height())
     }
 
     /// Retrieves the raw edge points of multiple images.
@@ -67,7 +67,7 @@ where
     /// A vector of vectors of `UVec2` representing the raw edge points of each image.
     #[inline]
     #[must_use]
-    pub fn multi_image_edge_raw(&self) -> Vec<Vec<UVec2>> {
+    pub fn multi_raw(&self) -> Vec<Vec<UVec2>> {
         self.iter().collect()
     }
 
@@ -83,7 +83,7 @@ where
     I: GenericImageView<Pixel = Bit>,
 {
     fn from(value: Edges<I>) -> Vec<Vec<UVec2>> {
-        value.multi_image_edge_raw()
+        value.multi_raw()
     }
 }
 
@@ -105,8 +105,8 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Edges")
-            .field("raw", &self.image_edges())
-            .field("translated", &translate_objects(self.image_edges()))
+            .field("raw", &self.multi_raw())
+            .field("translated", &self.multi_translated())
             .finish()
     }
 }
