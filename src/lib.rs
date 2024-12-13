@@ -8,6 +8,7 @@ pub(crate) use glam::{UVec2, Vec2};
 use binary_image::{BinaryImage, BinaryView, Bit};
 use image::{DynamicImage, GenericImageView};
 
+pub extern crate binary_image;
 pub use iter::Edges as Iter;
 pub use utils::{translate, translate_objects};
 
