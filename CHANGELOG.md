@@ -64,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Method `translate_vec` renamed to `translate`
   ([5573751](https://github.com/shnewto/edges/commit/55737517a246b207e87c8abf99d6fbe3d3786e0a)).
 - Dependency on [`bevy`](https://crates.io/crates/bevy) replaced with
-  [`bevy_math`](https://crates.io/crates/bevy_math) and [`bevy_render`](https://crates.io/crates/bevy_render)
+  [`bevy_math`] and [`bevy_render`]
   ([e7ab40a](https://github.com/shnewto/edges/commit/e7ab40a25e933bce24380bc090dea503b0bc93d4)).
 
 ### Fixed
@@ -77,10 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Crates from dependencies
   ([334361c](https://github.com/shnewto/edges/commit/334361c7c1acca3e3e548b679046c5117f087de2))
   ([e7ab40a](https://github.com/shnewto/edges/commit/e7ab40a25e933bce24380bc090dea503b0bc93d4)):
-  - [`hashbrown`](https://crates.io/crates/hashbrown)
-  - [`mashmap`](https://crates.io/crates/mashmap)
-  - [`ordered-float`](https://crates.io/crates/ordered-float)
-  - [`thiserror`](https://crates.io/crates/thiserror)
+  - [`hashbrown`]
+  - [`mashmap`]
+  - [`ordered-float`]
+  - [`thiserror`]
 - Method `march_edges` replaced by `new`
   ([3f5052f](https://github.com/shnewto/edges/commit/3f5052fbe720eee8011e26e617b737f4577a28d7)).
 
@@ -88,15 +88,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Upgrade dependencies: [`glam`](https://crates.io/crates/glam) 0.27.0 ([1912e24](https://github.com/shnewto/edges/commit/1912e24647e885c9340c7667f0f8967bca670456)).
+- Upgrade dependencies: [`glam`] 0.27.0 ([1912e24](https://github.com/shnewto/edges/commit/1912e24647e885c9340c7667f0f8967bca670456)).
 
 ## [0.3.3](https://github.com/shnewto/edges/compare/0.3.2...0.3.3) - 2024-07-08
 
 ### Changed
 
 - Upgrade dependencies:
-  [`image`](https://crates.io/crates/image) 0.25,
-  [`bevy`](https://crates.io/crates/bevy) 0.14
+  [`image`] 0.25,
+  [`bevy`] 0.14
   ([92acaa1](https://github.com/shnewto/edges/commit/92acaa1a3be42b085bf2fe9c4e258662254edcf5)).
 
 ## [0.3.2](https://github.com/shnewto/edges/compare/0.3.1...0.3.2) - 2024-05-13
@@ -105,9 +105,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Crates to dependencies
   ([c508c2a](https://github.com/shnewto/edges/commit/c508c2a6816593efbeaf807e5af1e06c9f165376)):
-  - [`hashbrown`](https://crates.io/crates/hashbrown)
-  - [`mashmap`](https://crates.io/crates/mashmap)
-  - [`ordered-float`](https://crates.io/crates/ordered-float)
+  - [`hashbrown`]
+  - [`mashmap`]
+  - [`ordered-float`]
 
 ### Changed
 
@@ -151,3 +151,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementation of
   `TryFrom<bevy::prelude::Image>`, `TryFrom<image::DynamicImage>` etc.
   traits for `Edges` ([006b40c](https://github.com/shnewto/edges/commit/006b40c7ff9557dac4166b04aa8e2fee7ce1bedc)).
+
+[`bevy`]: https://crates.io/crates/bevy
+[`bevy_math`]: https://crates.io/crates/bevy_math
+[`bevy_render`]: https://crates.io/crates/bevy_render
+[`image`]: https://crates.io/crates/image
+[`rayon`]: https://crates.io/crates/rayon
+[`thiserror`]: https://crates.io/crates/thiserror
+[`hashbrown`]: https://crates.io/crates/hashbrown
+[`mashmap`]: https://crates.io/crates/mashmap
+[`ordered-float`]: https://crates.io/crates/ordered-float
