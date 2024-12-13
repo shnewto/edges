@@ -62,11 +62,12 @@ pub fn translate(polygon: Vec<UVec2>, width: u32, height: u32) -> Vec<Vec2> {
     let iter = polygon.into_par_iter();
     #[cfg(not(feature = "parallel"))]
     let iter = polygon.into_iter();
+
+    let d = UVec2::new(width, height) / 2;
     iter.map(|p| {
-        Vec2::new(
-            p.x as f32 - (width / 2) as f32,
-            (height / 2) as f32 - p.y as f32,
-        )
+        let (x, y) = (p.x.abs_diff(d.x) as f32, p.y.abs_diff(d.y) as f32);
+        let cmp = p.cmplt(d);
+        Vec2::new(if cmp.x { -x } else { x }, if cmp.y { y } else { -y })
     })
     .collect()
 }
