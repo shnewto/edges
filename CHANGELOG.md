@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/shnewto/edges/compare/0.5.1...0.6.0) - 2024-12-04
+
+### Added
+
+- Feature `parallel`, which depends on [`rayon`]
+  ([6dab192](https://github.com/shnewto/edges/commit/6dab192ee37572bcd6d35fa14421d401f574f47b)).
+- External public crate [`binary_image`]
+  ([076d53b](https://github.com/shnewto/edges/commit/076d53b636d31583d41f34b4fdc55267478de085)).
+- Iterator `iter::Edges` for `Edges`
+  ([10397be](https://github.com/shnewto/edges/commit/10397beb6557fb239be9f254c31fa227389d47c2)).
+
+### Changed
+
+- [`rayon`] marked as optional dependencies
+  ([6dab192](https://github.com/shnewto/edges/commit/6dab192ee37572bcd6d35fa14421d401f574f47b)).
+- Functions factored out.
+  - `translate`
+  - `translate_objects`
+- Now `UVec2`, `Vec2` is inner
+  ([ba68b6c](https://github.com/shnewto/edges/commit/ba68b6c1fc8fb49c04697c6e20694f1deaea4fcc)).
+- Function names have been shortened
+  ([0266d7e](https://github.com/shnewto/edges/commit/0266d7e0c6a0c9b99ab5eac69e20eccfb9b25276)):
+  - `single_image_edge_translated` to `single_translated`.
+  - `single_image_edge_raw` to `single_raw`.
+  - `multi_image_edge_translated` to `multi_translated`.
+  - `multi_image_edge_raw` to `multi_raw`.
+- Now `Edges` is unit
+  ([10397be](https://github.com/shnewto/edges/commit/10397beb6557fb239be9f254c31fa227389d47c2)).
+
+### Fixed
+
+- Work with channels of pixels
+  ([10397be](https://github.com/shnewto/edges/commit/10397beb6557fb239be9f254c31fa227389d47c2)).
+
+### Removed
+
+- Functions `image_edges`, `new`
+  ([10397be](https://github.com/shnewto/edges/commit/10397beb6557fb239be9f254c31fa227389d47c2)).
+
 ## [0.5.1](https://github.com/shnewto/edges/compare/0.5.0...0.5.1) - 2024-12-04
 
 ### Added
@@ -157,6 +196,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [`bevy_render`]: https://crates.io/crates/bevy_render
 [`image`]: https://crates.io/crates/image
 [`rayon`]: https://crates.io/crates/rayon
+[`binary_image`]: https://crates.io/crates/binary_image
 [`thiserror`]: https://crates.io/crates/thiserror
 [`hashbrown`]: https://crates.io/crates/hashbrown
 [`mashmap`]: https://crates.io/crates/mashmap
