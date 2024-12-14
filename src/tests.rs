@@ -17,15 +17,12 @@ fn same_image_same_edges() {
         RenderAssetUsages::default(),
     )
     .unwrap();
-    let bevy_edges = Edges::from(bevy_image);
+    let bevy_edges = Edges::try_from(bevy_image).unwrap();
 
+    assert_eq!(dynamic_edges.single_raw(), bevy_edges.single_raw());
     assert_eq!(
-        dynamic_edges.single_image_edge_raw(),
-        bevy_edges.single_image_edge_raw()
-    );
-    assert_eq!(
-        dynamic_edges.single_image_edge_translated(),
-        bevy_edges.single_image_edge_translated()
+        dynamic_edges.single_translated(),
+        bevy_edges.single_translated()
     );
 }
 
@@ -43,14 +40,11 @@ fn same_images_same_edges() {
         RenderAssetUsages::default(),
     )
     .unwrap();
-    let bevy_edges = Edges::from(bevy_image);
+    let bevy_edges = Edges::try_from(bevy_image).unwrap();
 
+    assert_eq!(dynamic_edges.multi_raw(), bevy_edges.multi_raw());
     assert_eq!(
-        dynamic_edges.multi_image_edge_raw(),
-        bevy_edges.multi_image_edge_raw()
-    );
-    assert_eq!(
-        dynamic_edges.multi_image_edge_translated(),
-        bevy_edges.multi_image_edge_translated()
+        dynamic_edges.multi_translated(),
+        bevy_edges.multi_translated()
     );
 }

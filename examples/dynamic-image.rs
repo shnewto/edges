@@ -23,7 +23,7 @@ fn draw_png(img_path: &str) {
     let mut dt = DrawTarget::new(width, height);
     let mut pb = PathBuilder::new();
 
-    let mut edges_iter = edges.single_image_edge_raw().into_iter();
+    let mut edges_iter = edges.single_raw().unwrap().into_iter();
     let first_edge = edges_iter.next().unwrap();
     pb.move_to((first_edge.x * scale) as f32, (first_edge.y * scale) as f32);
     for edge in edges_iter {
