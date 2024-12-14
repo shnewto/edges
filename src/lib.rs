@@ -9,7 +9,7 @@ use binary_image::{BinaryImage, BinaryView, Bit};
 use image::{DynamicImage, GenericImageView};
 
 pub extern crate binary_image;
-pub use iter::Edges as Iter;
+pub use iter::Edges as EdgesIter;
 pub use utils::{translate, translate_objects};
 
 #[cfg(feature = "bevy")]
