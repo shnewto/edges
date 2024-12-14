@@ -1,13 +1,12 @@
 use binary_image::{Bit, Neighbors};
 use image::GenericImageView;
 
-use crate::{
-    utils::{collect_corners, in_polygon},
-    UVec2,
-};
+use crate::UVec2;
 use direction::Direction;
+use utils::in_polygon;
 
 mod direction;
+mod utils;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Edges<'a, I>
@@ -23,9 +22,14 @@ where
     I: GenericImageView<Pixel = Bit>,
 {
     pub fn new(image: &'a I) -> Self {
+        let (width, height) = image.dimensions();
         Self {
             image,
-            corners: collect_corners(image),
+            corners: (0..height)
+                .rev()
+                .flat_map(|y| (0..width).map(move |x| UVec2::new(x, y)))
+                .filter(|p| Neighbors::is_corner(image, p.x, p.y))
+                .collect(),
         }
     }
 }
