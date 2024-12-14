@@ -1,23 +1,24 @@
 #![doc = include_str!("../README.md")]
 
+use binary_image::{BinaryImage, BinaryView, Bit};
+use image::{DynamicImage, GenericImageView};
+
 #[cfg(feature = "bevy")]
 pub(crate) use bevy_math::prelude::{UVec2, Vec2};
 #[cfg(all(not(feature = "bevy"), feature = "glam-latest"))]
 pub(crate) use glam::{UVec2, Vec2};
 
-use binary_image::{BinaryImage, BinaryView, Bit};
-use image::{DynamicImage, GenericImageView};
-
 pub extern crate binary_image;
 pub use iter::Edges as EdgesIter;
-pub use utils::{translate, translate_objects};
+
+pub mod anchor;
+pub mod utils;
 
 #[cfg(feature = "bevy")]
 mod bevy;
 mod iter;
 #[cfg(all(feature = "bevy", test))]
 mod tests;
-mod utils;
 
 /// A struct representing the edges of a image.
 #[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -35,8 +36,9 @@ where
     #[inline]
     #[must_use]
     pub fn single_translated(&self) -> Option<Vec<Vec2>> {
-        self.single_raw()
-            .map(|polygon| translate(polygon, self.width(), self.height()))
+        self.iter()
+            .next()
+            .map(|polygon| anchor::Anchor::Center(self.height(), self.width()).translate(polygon))
     }
 
     /// Retrieves the raw edge points of a single image.
@@ -58,7 +60,7 @@ where
     #[inline]
     #[must_use]
     pub fn multi_translated(&self) -> Vec<Vec<Vec2>> {
-        translate_objects(self.iter(), self.width(), self.height())
+        anchor::Anchor::Center(self.height(), self.width()).translate_polygons(self.iter())
     }
 
     /// Retrieves the raw edge points of multiple images.
@@ -76,15 +78,6 @@ where
     #[must_use]
     pub fn iter(&self) -> iter::Edges<I> {
         self.into_iter()
-    }
-}
-
-impl<I> From<Edges<I>> for Vec<Vec<UVec2>>
-where
-    I: GenericImageView<Pixel = Bit>,
-{
-    fn from(value: Edges<I>) -> Vec<Vec<UVec2>> {
-        value.multi_raw()
     }
 }
 
