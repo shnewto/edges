@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `multi_image_edge_raw` to `multi_raw`.
 - Now `Edges` is unit
   ([10397be](https://github.com/shnewto/edges/commit/10397beb6557fb239be9f254c31fa227389d47c2)).
+- Implementation of `From` for `bevy_image::prelude::Image`
+  replaced by `TryFrom`
+  ([10397be](https://github.com/shnewto/edges/commit/10397beb6557fb239be9f254c31fa227389d47c2)).
 
 ### Fixed
 
