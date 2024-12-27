@@ -1,6 +1,6 @@
-use crate::UVec2;
+use crate::{UVec2, Vec2};
 
-// Get the bounding box of the polygon
+#[inline]
 pub fn bounding_box(polygon: impl Iterator<Item = UVec2>) -> Option<(UVec2, UVec2)> {
     polygon
         .map(|p| (p, p))
@@ -8,7 +8,8 @@ pub fn bounding_box(polygon: impl Iterator<Item = UVec2>) -> Option<(UVec2, UVec
 }
 
 #[inline]
-#[must_use]
-pub fn center(polygon: impl Iterator<Item = UVec2>) -> Option<UVec2> {
-    bounding_box(polygon).map(|(min, max)| min + (max - min) / 2)
+pub fn center_of(polygon: impl Iterator<Item = UVec2>) -> Option<Vec2> {
+    bounding_box(polygon)
+        .map(|(min, max)| (min.as_vec2(), max.as_vec2()))
+        .map(|(min, max)| min + (max - min) / 2.)
 }
