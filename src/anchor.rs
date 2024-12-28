@@ -33,7 +33,7 @@ impl Anchor {
     #[must_use]
     pub fn translate(self, polygon: Vec<UVec2>) -> Vec<Vec2> {
         let center = self.size().map_or_else(
-            || center_of(polygon.iter().copied()).unwrap_or(Vec2::ZERO),
+            || center_of(&polygon).unwrap_or(Vec2::ZERO),
             |size| size.as_vec2() / 2.,
         );
         #[cfg(feature = "parallel")]
@@ -51,8 +51,30 @@ impl Anchor {
     ///
     /// A vector of vector of `Vec2` representing the translated objects.
     #[inline]
-    #[must_use]
     pub fn translate_polygons(self, polygons: impl Iterator<Item = Vec<UVec2>>) -> Vec<Vec<Vec2>> {
-        polygons.map(|polygon| self.translate(polygon)).collect()
+        if let Some(center) = self.size().map(|size| size.as_vec2() / 2.) {
+            polygons
+                .map(|polygon| {
+                    polygon
+                        .into_iter()
+                        .map(|p| Vec2::new(p.x as f32 - center.x, center.y - p.y as f32))
+                        .collect()
+                })
+                .collect()
+        } else {
+            polygons
+                .map(|polygon| {
+                    center_of(&polygon).map_or_else(Vec::new, |center| {
+                        #[cfg(feature = "parallel")]
+                        let iter = polygon.into_par_iter();
+                        #[cfg(not(feature = "parallel"))]
+                        let iter = polygon.into_iter();
+
+                        iter.map(|p| Vec2::new(p.x as f32 - center.x, center.y - p.y as f32))
+                            .collect()
+                    })
+                })
+                .collect()
+        }
     }
 }

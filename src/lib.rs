@@ -38,7 +38,7 @@ where
     pub fn single_translated(&self) -> Option<Vec<Vec2>> {
         self.iter()
             .next()
-            .map(|polygon| anchor::Anchor::Center(self.height(), self.width()).translate(polygon))
+            .map(|polygon| self.anchor().translate(polygon))
     }
 
     /// Retrieves the raw edge points of a single image.
@@ -60,7 +60,7 @@ where
     #[inline]
     #[must_use]
     pub fn multi_translated(&self) -> Vec<Vec<Vec2>> {
-        anchor::Anchor::Center(self.height(), self.width()).translate_polygons(self.iter())
+        self.anchor().translate_polygons(self.iter())
     }
 
     /// Retrieves the raw edge points of multiple images.
@@ -78,6 +78,12 @@ where
     #[must_use]
     pub fn iter(&self) -> iter::Edges<I> {
         self.into_iter()
+    }
+
+    #[inline]
+    #[must_use]
+    fn anchor(&self) -> anchor::Anchor {
+        anchor::Anchor::Center(self.height(), self.width())
     }
 }
 

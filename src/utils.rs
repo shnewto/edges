@@ -8,8 +8,12 @@ pub fn bounding_box(polygon: impl Iterator<Item = UVec2>) -> Option<(UVec2, UVec
 }
 
 #[inline]
-pub fn center_of(polygon: impl Iterator<Item = UVec2>) -> Option<Vec2> {
-    bounding_box(polygon)
-        .map(|(min, max)| (min.as_vec2(), max.as_vec2()))
-        .map(|(min, max)| min + (max - min) / 2.)
+#[must_use]
+#[allow(clippy::cast_possible_truncation)]
+pub fn center_of(polygon: &[UVec2]) -> Option<Vec2> {
+    polygon
+        .iter()
+        .copied()
+        .reduce(|acc, p| acc + p)
+        .map(|sum| (sum / polygon.len() as u32).as_vec2())
 }
