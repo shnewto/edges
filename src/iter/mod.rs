@@ -57,9 +57,7 @@ where
                 current = if previous_direction.reverse() == direction {
                     *object.last().unwrap()
                 } else {
-                    direction
-                        .find_by_direction(current, corners)
-                        .unwrap_or(start)
+                    direction.find_in(current, corners).unwrap_or(start)
                 };
 
                 if *object.last().unwrap() == start && object.contains(&current) {
