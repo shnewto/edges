@@ -28,7 +28,9 @@ where
             corners: (0..height)
                 .rev()
                 .flat_map(|y| (0..width).map(move |x| UVec2::new(x, y)))
-                .filter(|p| Neighbors::is_corner(image, p.x, p.y))
+                .filter(|p| {
+                    *image.get_pixel(p.x, p.y) && Neighbors::from_image(image, p.x, p.y).is_corner()
+                })
                 .collect(),
         }
     }
@@ -45,11 +47,11 @@ where
             let mut current = start;
             let mut object = vec![start];
 
-            let neighbors = Neighbors::get_neighbors(self.image, start.x, start.y);
+            let neighbors = Neighbors::from_image(self.image, start.x, start.y);
             let mut previous_direction = Direction::next_direction(None, neighbors);
 
             loop {
-                let neighbors = Neighbors::get_neighbors(self.image, current.x, current.y);
+                let neighbors = Neighbors::from_image(self.image, current.x, current.y);
                 let direction = Direction::next_direction(Some(previous_direction), neighbors);
 
                 current = if previous_direction.reverse() == direction {
