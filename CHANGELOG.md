@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/shnewto/edges/compare/0.6.0...0.7.0) - 2025-01-05
+
+### Added
+
+- public `anchor` module ([f2c4560](https://github.com/shnewto/edges/commit/f3c4560ca1bd5209155d632e36e0be374b915947)).
+  - Enumeration `Anchor`:
+    - `Center` for translate points by center of rect.
+    - `Vertical` | `Horizontal` center to translate points by center of line.
+    - `Absolute` center for translate points by center of her bounding box.
+- `utils` module marked public ([f2c4560](https://github.com/shnewto/edges/commit/f3c4560ca1bd5209155d632e36e0be374b915947)).
+- `utils::center_of` function for get center of polygon ([03165ca](https://github.com/shnewto/edges/commit/03165cabc3a9b384703c47e3d1855d357c6380e7)).
+- `utils::bounding_box` function for get bounding box of polygon ([f2c4560](https://github.com/shnewto/edges/commit/f3c4560ca1bd5209155d632e36e0be374b915947)).
+
+### Changed
+
+- Upgrade dependencies: [`binary_image`] 0.6 ([159761a](https://github.com/shnewto/edges/commit/159761a1be6fb494d3d2295f4885e535d65cccc2)).
+- `utils::translate` function moved to `anchor::Anchor` implementation ([f2c4560](https://github.com/shnewto/edges/commit/f3c4560ca1bd5209155d632e36e0be374b915947)).
+- `utils::translate_objects` function renamed to `translate_polygons`
+  and moved to `anchor::Anchor` ([f2c4560](https://github.com/shnewto/edges/commit/f3c4560ca1bd5209155d632e36e0be374b915947)).
+
 ## [0.6.0](https://github.com/shnewto/edges/compare/0.5.1...0.6.0) - 2024-12-14
 
 ### Added
