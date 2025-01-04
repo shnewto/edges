@@ -1,16 +1,7 @@
-use crate::UVec2;
-
-// Get the bounding box of the polygon
-pub fn bounding_box(polygon: &[UVec2]) -> Option<(UVec2, UVec2)> {
-    polygon
-        .iter()
-        .copied()
-        .zip(polygon.iter().copied())
-        .reduce(|(min, max), (a, b)| (min.min(a), max.max(b)))
-}
+use crate::{utils::bounding_box, UVec2};
 
 pub fn in_polygon(x: u32, y: u32, polygon: &[UVec2]) -> bool {
-    if let Some((min, max)) = bounding_box(polygon) {
+    if let Some((min, max)) = bounding_box(polygon.iter().copied()) {
         // Check if the is within the bounding box
         if x < min.x || x > max.x || y < min.y || y > max.y {
             return false; // Early exit if outside the bounding box

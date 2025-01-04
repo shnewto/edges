@@ -19,7 +19,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn find_by_direction(self, current: UVec2, points: &[UVec2]) -> Option<UVec2> {
+    pub fn find_in(self, current: UVec2, points: &[UVec2]) -> Option<UVec2> {
         #[cfg(not(feature = "parallel"))]
         let iter = points.iter();
         #[cfg(feature = "parallel")]
@@ -63,6 +63,7 @@ impl Direction {
         .copied()
     }
 
+    #[inline]
     pub fn reverse(self) -> Self {
         match self {
             North => South,
