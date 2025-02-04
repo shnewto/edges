@@ -1,5 +1,7 @@
 use crate::{utils::bounding_box, UVec2};
 
+pub use neigbors::Neighbors;
+
 pub fn in_polygon(x: u32, y: u32, polygon: &[UVec2]) -> bool {
     if let Some((min, max)) = bounding_box(polygon.iter().copied()) {
         // Check if the is within the bounding box

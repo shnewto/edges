@@ -6,6 +6,7 @@ use direction::Direction;
 use utils::in_polygon;
 
 mod direction;
+mod neigbors;
 mod utils;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
