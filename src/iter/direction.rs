@@ -1,7 +1,7 @@
-use binary_image::Neighbors;
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
+use super::Neighbors;
 use crate::UVec2;
 use Direction::{East, North, Northeast, Northwest, South, Southeast, Southwest, West};
 

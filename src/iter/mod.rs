@@ -1,11 +1,13 @@
-use binary_image::{Bit, Neighbors};
+use binary_image::Bit;
 use image::GenericImageView;
 
 use crate::UVec2;
 use direction::Direction;
+pub(self) use neigbors::Neighbors;
 use utils::in_polygon;
 
 mod direction;
+mod neigbors;
 mod utils;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
