@@ -29,7 +29,7 @@ parallel = ["dep:rayon"]
 
 
 [dependencies]
-binary_image = "0.8"
+binary_image = "0.8.1"
 bitflags = "2.9.1"
 derive_more = "2.0.1"
 image = { version = "0.25", default-features = false }
