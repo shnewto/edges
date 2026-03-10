@@ -29,7 +29,7 @@ parallel = ["dep:rayon"]
 
 
 [dependencies]
-binary_image = { git = "https://github.com/shnewto/binary_image" }
+binary_image = { git = "https://github.com/shnewto/binary_image", version = "0.8.2-fork" }
 bitflags = "2.11"
 derive_more = "2.1.1"
 image = { version = "0.25", default-features = false }
