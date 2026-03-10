@@ -76,7 +76,7 @@ where
 
     #[inline]
     #[must_use]
-    pub fn iter(&self) -> iter::Edges<I> {
+    pub fn iter(&self) -> iter::Edges<'_, I> {
         self.into_iter()
     }
 
