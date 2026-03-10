@@ -3,7 +3,7 @@ use image::GenericImageView;
 
 use crate::UVec2;
 use direction::Direction;
-pub(self) use neigbors::Neighbors;
+use neigbors::Neighbors;
 use utils::in_polygon;
 
 mod direction;
@@ -38,7 +38,7 @@ where
     }
 }
 
-impl<'a, I> Iterator for Edges<'a, I>
+impl<I> Iterator for Edges<'_, I>
 where
     I: GenericImageView<Pixel = Bit>,
 {
