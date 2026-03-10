@@ -1,6 +1,6 @@
 use crate::Edges;
 use bevy_image::{prelude::Image, CompressedImageFormats, ImageSampler, ImageType};
-use bevy_render::render_asset::RenderAssetUsages;
+use bevy_asset::RenderAssetUsages;
 use std::path::Path;
 
 #[test]

@@ -24,39 +24,44 @@ pedantic = { level = "warn", priority = 0 }
 [features]
 default = ["bevy", "parallel"]
 glam-latest = ["dep:glam"]
-bevy = ["dep:bevy_math", "dep:bevy_image", "binary_image/bevy"]
+bevy = ["dep:bevy_math", "dep:bevy_image", "dep:bevy_asset", "binary_image/bevy"]
 parallel = ["dep:rayon"]
 
 
 [dependencies]
-binary_image = "0.8.1"
-bitflags = "2.9.1"
-derive_more = "2.0.1"
+binary_image = { git = "https://github.com/shnewto/binary_image" }
+bitflags = "2.11"
+derive_more = "2.1.1"
 image = { version = "0.25", default-features = false }
 rayon = { version = "1", optional = true }
-glam = { version = "0.30", optional = true }
+glam = { version = "0.32", optional = true }
 
 [dependencies.bevy_math]
-version = "0.16"
+version = "0.18"
 default-features = false
 optional = true
 
 [dependencies.bevy_image]
-version = "0.16"
+version = "0.18"
+default-features = false
+optional = true
+
+[dependencies.bevy_asset]
+version = "0.18"
 default-features = false
 optional = true
 
 [dev-dependencies]
 raqote = "0.8"
-open = "5.1"
+open = "5"
 
 [dev-dependencies.bevy_image]
-version = "0.16"
+version = "0.18"
 default-features = false
 features = ["png"]
 
 [dev-dependencies.bevy_render]
-version = "0.16"
+version = "0.18"
 default-features = false
 
 [[example]]
