@@ -1,32 +1,35 @@
 #![doc = include_str!("../README.md")]
 
-use binary_image::{BinaryImage, BinaryView, Bit};
-use image::{DynamicImage, GenericImageView};
+use image::DynamicImage;
 
 #[cfg(feature = "bevy")]
 pub(crate) use bevy_math::prelude::{UVec2, Vec2};
 #[cfg(all(not(feature = "bevy"), feature = "glam-latest"))]
 pub(crate) use glam::{UVec2, Vec2};
 
-pub extern crate binary_image;
+pub use binary::{BinaryImage, BinaryImageView, BinaryView, Bit};
 pub use iter::Edges as EdgesIter;
 
 pub mod anchor;
+pub mod binary;
 pub mod utils;
 
 #[cfg(feature = "bevy")]
 mod bevy;
+#[cfg(feature = "bevy")]
+pub use bevy::IntoBinaryImageError;
+
 mod iter;
 #[cfg(all(feature = "bevy", test))]
 mod tests;
 
 /// A struct representing the edges of a image.
 #[derive(Default, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Edges<I: GenericImageView<Pixel = Bit>>(pub I);
+pub struct Edges<I: BinaryImageView>(pub I);
 
 impl<I> Edges<I>
 where
-    I: GenericImageView<Pixel = Bit>,
+    I: BinaryImageView,
 {
     /// Translates the edges of a single image into a coordinate system centered at (0, 0).
     ///
@@ -101,7 +104,7 @@ impl<'a> From<&'a DynamicImage> for Edges<BinaryView<'a, DynamicImage>> {
 
 impl<I> std::fmt::Debug for Edges<I>
 where
-    I: GenericImageView<Pixel = Bit>,
+    I: BinaryImageView,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Edges")
@@ -113,7 +116,7 @@ where
 
 impl<I> std::ops::Deref for Edges<I>
 where
-    I: GenericImageView<Pixel = Bit>,
+    I: BinaryImageView,
 {
     type Target = I;
     fn deref(&self) -> &Self::Target {
@@ -123,7 +126,7 @@ where
 
 impl<'a, I> IntoIterator for &'a Edges<I>
 where
-    I: GenericImageView<Pixel = Bit>,
+    I: BinaryImageView,
 {
     type Item = Vec<UVec2>;
     type IntoIter = iter::Edges<'a, I>;

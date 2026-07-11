@@ -1,6 +1,6 @@
-use binary_image::Bit;
 use derive_more::{AsMut, AsRef, Deref, DerefMut, Display, From, Into};
-use image::GenericImageView;
+
+use crate::binary::BinaryImageView;
 
 bitflags::bitflags! {
     /// Neighbor constants for 8-connectivity pixel access.
@@ -39,7 +39,7 @@ impl Neighbors {
     #[must_use]
     pub fn from_image<I>(image: &I, mut x: u32, mut y: u32) -> Self
     where
-        I: GenericImageView<Pixel = Bit>,
+        I: BinaryImageView,
     {
         let mut neighbors = Neighbors::empty();
         if y < u32::MAX {

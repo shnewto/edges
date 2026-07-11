@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- In-crate `binary` module (`Bit`, `BinaryImage`, `BinaryView`, `BinaryImageView`) replacing the external [`binary_image`] dependency.
+- `BinaryImage` helpers used by downstream crates: `crop`, `resize`, `flip_horizontal`, `flip_vertical`, and Bevy `TryFrom`.
+
+### Changed
+
+- Bevy image conversion errors are now `edges::IntoBinaryImageError` (wrapping Bevy's `IntoDynamicImageError`) instead of `binary_image::bevy::IntoBinaryImageError`.
+
+### Removed
+
+- Dependency on [`binary_image`] (including the git fork workaround).
+- `pub extern crate binary_image` re-export.
+
 ## [0.7.0](https://github.com/shnewto/edges/compare/0.6.0...0.7.0) - 2025-01-05
 
 ### Added
