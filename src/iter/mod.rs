@@ -1,6 +1,4 @@
-use binary_image::Bit;
-use image::GenericImageView;
-
+use crate::binary::BinaryImageView;
 use crate::UVec2;
 use direction::Direction;
 use neigbors::Neighbors;
@@ -13,7 +11,7 @@ mod utils;
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Edges<'a, I>
 where
-    I: GenericImageView<Pixel = Bit>,
+    I: BinaryImageView,
 {
     image: &'a I,
     corners: Vec<UVec2>,
@@ -21,7 +19,7 @@ where
 
 impl<'a, I> Edges<'a, I>
 where
-    I: GenericImageView<Pixel = Bit>,
+    I: BinaryImageView,
 {
     pub fn new(image: &'a I) -> Self {
         let (width, height) = image.dimensions();
@@ -40,7 +38,7 @@ where
 
 impl<I> Iterator for Edges<'_, I>
 where
-    I: GenericImageView<Pixel = Bit>,
+    I: BinaryImageView,
 {
     type Item = Vec<UVec2>;
     fn next(&mut self) -> Option<Self::Item> {
