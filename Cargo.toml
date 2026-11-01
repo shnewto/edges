@@ -36,17 +36,17 @@ rayon = { version = "1", optional = true }
 glam = { version = "0.32", optional = true }
 
 [dependencies.bevy_math]
-version = "0.18"
+version = "0.19"
 default-features = false
 optional = true
 
 [dependencies.bevy_image]
-version = "0.18"
+version = "0.19"
 default-features = false
 optional = true
 
 [dependencies.bevy_asset]
-version = "0.18"
+version = "0.19"
 default-features = false
 optional = true
 
@@ -55,12 +55,12 @@ raqote = "0.8"
 open = "5"
 
 [dev-dependencies.bevy_image]
-version = "0.18"
+version = "0.19"
 default-features = false
 features = ["png"]
 
 [dev-dependencies.bevy_render]
-version = "0.18"
+version = "0.19"
 default-features = false
 
 [[example]]
